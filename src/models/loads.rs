@@ -64,6 +64,7 @@ impl Default for Stress {
 /// * `horizontal_load_y` - Horizontal load in y-direction in ton
 /// * `moment_x` - Moment in x-direction in ton.m
 /// * `moment_y` - Moment in y-direction in ton.m
+/// * `vertical_load` - Vertical load in ton
 #[derive(Debug, Clone)]
 pub struct Loads {
     pub service_load: Stress,
@@ -73,6 +74,7 @@ pub struct Loads {
     pub horizontal_load_y: Option<f64>,
     pub moment_x: Option<f64>,
     pub moment_y: Option<f64>,
+    pub vertical_load: Option<f64>,
 }
 
 impl Default for Loads {
@@ -85,6 +87,7 @@ impl Default for Loads {
             horizontal_load_y: None,
             moment_x: None,
             moment_y: None,
+            vertical_load: None,
         }
     }
 }
@@ -127,13 +130,13 @@ impl Loads {
     ///
     /// # Note
     /// If `vertical_load` is zero, it returns `(0.0, 0.0)` to prevent division by zero.
-    pub fn calc_eccentricity(&self, vertical_load: f64) -> (f64, f64) {
-        if vertical_load == 0.0 {
+    pub fn calc_eccentricity(&self) -> (f64, f64) {
+        if self.vertical_load.is_none() || self.vertical_load.unwrap() == 0.0 {
             return (0.0, 0.0);
         }
         if let (Some(mx), Some(my)) = (self.moment_x, self.moment_y) {
-            let ex = mx / vertical_load;
-            let ey = my / vertical_load;
+            let ex = mx / self.vertical_load.unwrap();
+            let ey = my / self.vertical_load.unwrap();
             (ex, ey)
         } else {
             (0.0, 0.0)

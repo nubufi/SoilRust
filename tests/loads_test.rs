@@ -3,12 +3,13 @@ use soilrust::models::loads::{LoadCase, LoadSeverity, Loads, Stress};
 #[test]
 fn test_calc_eccentricity() {
     let loading = Loads {
+        vertical_load: Some(10.0),
         moment_x: Some(20.0),
         moment_y: Some(15.0),
         ..Default::default()
     };
 
-    let (ex, ey) = loading.calc_eccentricity(10.);
+    let (ex, ey) = loading.calc_eccentricity();
 
     assert!((ex - 2.).abs() < 1e-6);
     assert!((ey - 1.5).abs() < 1e-6);
@@ -22,7 +23,7 @@ fn test_calc_eccentricity_zero_load() {
         ..Default::default()
     };
 
-    let (ex, ey) = loading.calc_eccentricity(0.);
+    let (ex, ey) = loading.calc_eccentricity();
 
     assert_eq!(ex, 0.0);
     assert_eq!(ey, 0.0);
