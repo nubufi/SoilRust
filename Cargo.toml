@@ -1,6 +1,6 @@
 [package]
 name = "soilrust"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2024"
 authors = ["Numan Burak Fidan"]
 license = "MIT OR Apache-2.0"
@@ -8,7 +8,7 @@ description = "A geotechnical engineering library for soil mechanics calculation
 repository = "https://github.com/nubufi/SoilRust"
 readme = "README.md"
 keywords = ["geotechnical", "soil-mechanics", "rust"]
-categories = ["science", "engineering"]
+categories = ["science", "mathematics"]
 
 [dependencies]
 # Numerical computation crates
