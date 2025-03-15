@@ -1,6 +1,6 @@
 /target
-release.sh
-
+*.sh
+reports
 # Added by cargo
 #
 # already existing elements were commented out
