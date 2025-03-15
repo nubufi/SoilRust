@@ -1,4 +1,4 @@
-use soilrust::models::{SoilLayer, SoilProfile};
+use soilrust::models::soil_profile::{SoilLayer, SoilProfile};
 
 /// Creates a reusable soil profile for testing.
 pub fn setup_soil_profile() -> SoilProfile {
