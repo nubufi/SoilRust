@@ -1,11 +1,8 @@
+use crate::enums::SelectionMethod;
+use ordered_float::OrderedFloat;
+use std::collections::BTreeMap;
 use std::fmt;
 
-#[derive(Debug, Clone, Copy)]
-pub enum IdealizedMode {
-    Min,
-    Average,
-    Max,
-}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NValue {
     Value(i32),
@@ -42,7 +39,7 @@ impl NValue {
     }
 
     /// Multiply by a factor
-    pub fn mul(self, factor: f64) -> Self {
+    pub fn mul_by_f64(self, factor: f64) -> Self {
         match self {
             NValue::Value(n) => NValue::Value((n as f64 * factor) as i32),
             NValue::Refusal => NValue::Refusal,
@@ -50,7 +47,7 @@ impl NValue {
     }
 
     /// Sum up with another NValue
-    pub fn add(self, other: Self) -> Self {
+    pub fn sum_with(self, other: Self) -> Self {
         match (self, other) {
             (NValue::Value(n1), NValue::Value(n2)) => NValue::Value(n1 + n2),
             _ => NValue::Refusal,
@@ -77,19 +74,19 @@ impl fmt::Display for NValue {
 // Implement ordering so that Refusal is the BEST case (highest value)
 impl PartialOrd for NValue {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match (self, other) {
-            (NValue::Refusal, NValue::Refusal) => Some(std::cmp::Ordering::Equal),
-            (NValue::Refusal, _) => Some(std::cmp::Ordering::Greater), // Refusal is best
-            (_, NValue::Refusal) => Some(std::cmp::Ordering::Less),
-            (NValue::Value(a), NValue::Value(b)) => a.partial_cmp(b),
-        }
+        Some(self.cmp(other))
     }
 }
-
-/// Implement `Ord` for sorting
 impl Ord for NValue {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
+        match (self, other) {
+            (NValue::Refusal, NValue::Refusal) => std::cmp::Ordering::Equal,
+            (NValue::Refusal, _) => std::cmp::Ordering::Greater,
+            (_, NValue::Refusal) => std::cmp::Ordering::Less,
+            (NValue::Value(a), NValue::Value(b)) => {
+                a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+            }
+        }
     }
 }
 // -------------------------------------------------------------------------------------------
@@ -123,7 +120,7 @@ impl SPTBlow {
             n1,
             n2,
             n3,
-            n: n2.add(n3),
+            n: n2.sum_with(n3),
             ..Default::default()
         }
     }
@@ -133,9 +130,9 @@ impl SPTBlow {
     /// # Arguments
     /// * `energy_correction_factor` - Energy correction factor to convert N value to N60
     pub fn apply_energy_correction(&mut self, energy_correction_factor: f64) {
-        let n60 = self.n.mul(energy_correction_factor);
+        let n60 = self.n.mul_by_f64(energy_correction_factor);
         self.n60 = Some(n60);
-        self.n90 = Some(n60.mul(1.5));
+        self.n90 = Some(n60.mul_by_f64(1.5));
     }
 
     /// Set overburden correction factor
@@ -187,9 +184,9 @@ impl SPTBlow {
         if let (Some(n60), Some(cn), Some(alpha), Some(beta)) =
             (self.n60, self.cn, self.alpha, self.beta)
         {
-            let n1_60 = n60.mul(cn * cr * cs * cb);
+            let n1_60 = n60.mul_by_f64(cn * cr * cs * cb);
             self.n1_60 = Some(n1_60);
-            self.n1_60f = Some(n1_60.mul(beta).add_f64(alpha));
+            self.n1_60f = Some(n1_60.mul_by_f64(beta).add_f64(alpha));
         }
     }
 }
@@ -289,22 +286,20 @@ impl SPT {
     /// Get the idealized experiment
     ///
     /// # Arguments
-    /// * `mode` - Idealized mode (Min, Average, Max)
+    /// * `mode` - Idealized mode to use when combining the layers
     /// * `name` - Name of the idealized experiment
     ///
     /// # Returns
     /// * `SPTExp` - Idealized experiment
-    pub fn get_idealized_exp(&self, mode: IdealizedMode, name: String) -> SPTExp {
-        use std::collections::BTreeMap;
-
-        let mut depth_map: BTreeMap<i32, Vec<NValue>> = BTreeMap::new();
+    pub fn get_idealized_exp(&self, mode: SelectionMethod, name: String) -> SPTExp {
+        let mut depth_map: BTreeMap<OrderedFloat<f64>, Vec<NValue>> = BTreeMap::new();
 
         // Collect all unique depths and corresponding `n` values
         for exp in &self.exps {
             for blow in &exp.blows {
                 depth_map
-                    .entry((blow.depth * 1000.).round() as i32)
-                    .or_insert_with(Vec::new)
+                    .entry(OrderedFloat(blow.depth))
+                    .or_default()
                     .push(blow.n);
             }
         }
@@ -314,14 +309,14 @@ impl SPT {
 
         for (&depth, n_values) in &depth_map {
             let selected_n = match mode {
-                IdealizedMode::Min => *n_values.iter().min().unwrap(), // Refusal is best
-                IdealizedMode::Max => *n_values.iter().max().unwrap(), // Refusal is best
-                IdealizedMode::Average => {
+                SelectionMethod::Min => *n_values.iter().min().unwrap(), // Refusal is best
+                SelectionMethod::Max => *n_values.iter().max().unwrap(), // Refusal is best
+                SelectionMethod::Avg => {
                     let sum: f64 = n_values
                         .iter()
                         .filter_map(|&n| n.to_option().map(|v| v as f64))
                         .sum();
-                    let count = n_values.iter().count();
+                    let count = n_values.len();
 
                     NValue::from_i32((sum / count as f64).round() as i32)
                 }
@@ -329,7 +324,7 @@ impl SPT {
 
             // Add to new SPTExp
             idealized_blows.push(SPTBlow {
-                depth: (depth as f64) / 1000.,
+                depth: depth.into_inner(),
                 n1: NValue::Value(0), // Placeholder (could be refined if needed)
                 n2: NValue::Value(0),
                 n3: NValue::Value(0),

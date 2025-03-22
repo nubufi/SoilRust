@@ -1,1 +1,2 @@
-pub mod models; // Include the models module
+pub mod enums;
+pub mod models;

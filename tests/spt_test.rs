@@ -1,4 +1,4 @@
-use soilrust::models::spt::*;
+use soilrust::{enums::SelectionMethod, models::spt::*};
 
 // -------------------------------------------------------------------------------------------
 // Test NValue
@@ -15,19 +15,25 @@ fn test_nvalue_to_i32() {
 }
 
 #[test]
-fn test_nvalue_mul() {
-    assert_eq!(NValue::Value(10).mul(2.0), NValue::Value(20));
-    assert_eq!(NValue::Value(5).mul(2.5), NValue::Value(12)); // 5 * 2.5 = 12.5 -> truncated to 12
-    assert_eq!(NValue::Refusal.mul(3.0), NValue::Refusal);
+fn test_nvalue_mul_by_f64() {
+    assert_eq!(NValue::Value(10).mul_by_f64(2.0), NValue::Value(20));
+    assert_eq!(NValue::Value(5).mul_by_f64(2.5), NValue::Value(12)); // 5 * 2.5 = 12.5 -> truncated to 12
+    assert_eq!(NValue::Refusal.mul_by_f64(3.0), NValue::Refusal);
 }
 
 #[test]
-fn test_nvalue_add() {
-    assert_eq!(NValue::Value(10).add(NValue::Value(5)), NValue::Value(15));
-    assert_eq!(NValue::Value(0).add(NValue::Value(0)), NValue::Value(0));
-    assert_eq!(NValue::Value(10).add(NValue::Refusal), NValue::Refusal);
-    assert_eq!(NValue::Refusal.add(NValue::Value(5)), NValue::Refusal);
-    assert_eq!(NValue::Refusal.add(NValue::Refusal), NValue::Refusal);
+fn test_nvalue_sum_with() {
+    assert_eq!(
+        NValue::Value(10).sum_with(NValue::Value(5)),
+        NValue::Value(15)
+    );
+    assert_eq!(
+        NValue::Value(0).sum_with(NValue::Value(0)),
+        NValue::Value(0)
+    );
+    assert_eq!(NValue::Value(10).sum_with(NValue::Refusal), NValue::Refusal);
+    assert_eq!(NValue::Refusal.sum_with(NValue::Value(5)), NValue::Refusal);
+    assert_eq!(NValue::Refusal.sum_with(NValue::Refusal), NValue::Refusal);
 }
 
 #[test]
@@ -182,11 +188,11 @@ fn test_get_idealized_exp() {
     spt.add_exp(exp2);
 
     let idealized_exp_min =
-        spt.get_idealized_exp(IdealizedMode::Min, "idealized_exp_min".to_string());
+        spt.get_idealized_exp(SelectionMethod::Min, "idealized_exp_min".to_string());
     let idealized_exp_avg =
-        spt.get_idealized_exp(IdealizedMode::Average, "idealized_exp_avg".to_string());
+        spt.get_idealized_exp(SelectionMethod::Avg, "idealized_exp_avg".to_string());
     let idealized_exp_max =
-        spt.get_idealized_exp(IdealizedMode::Max, "idealized_exp_max".to_string());
+        spt.get_idealized_exp(SelectionMethod::Max, "idealized_exp_max".to_string());
 
     assert_eq!(idealized_exp_min.name, "idealized_exp_min");
     assert_eq!(idealized_exp_avg.name, "idealized_exp_avg");

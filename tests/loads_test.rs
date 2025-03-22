@@ -1,4 +1,7 @@
-use soilrust::models::loads::{LoadCase, LoadSeverity, Loads, Stress};
+use soilrust::{
+    enums::{LoadCase, SelectionMethod},
+    models::loads::{Loads, Stress},
+};
 
 #[test]
 fn test_calc_eccentricity() {
@@ -53,43 +56,43 @@ fn test_get_vertical_stress() {
 
     // Test Service Load
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::ServiceLoad, LoadSeverity::Min),
+        stress_data.get_vertical_stress(LoadCase::ServiceLoad, SelectionMethod::Min),
         10.0
     );
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::ServiceLoad, LoadSeverity::Avg),
+        stress_data.get_vertical_stress(LoadCase::ServiceLoad, SelectionMethod::Avg),
         15.0
     );
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::ServiceLoad, LoadSeverity::Max),
+        stress_data.get_vertical_stress(LoadCase::ServiceLoad, SelectionMethod::Max),
         20.0
     );
 
     // Test Ultimate Load
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::UltimateLoad, LoadSeverity::Min),
+        stress_data.get_vertical_stress(LoadCase::UltimateLoad, SelectionMethod::Min),
         25.0
     );
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::UltimateLoad, LoadSeverity::Avg),
+        stress_data.get_vertical_stress(LoadCase::UltimateLoad, SelectionMethod::Avg),
         30.0
     );
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::UltimateLoad, LoadSeverity::Max),
+        stress_data.get_vertical_stress(LoadCase::UltimateLoad, SelectionMethod::Max),
         35.0
     );
 
     // Test Seismic Load
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::SeismicLoad, LoadSeverity::Min),
+        stress_data.get_vertical_stress(LoadCase::SeismicLoad, SelectionMethod::Min),
         40.0
     );
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::SeismicLoad, LoadSeverity::Avg),
+        stress_data.get_vertical_stress(LoadCase::SeismicLoad, SelectionMethod::Avg),
         45.0
     );
     assert_eq!(
-        stress_data.get_vertical_stress(LoadCase::SeismicLoad, LoadSeverity::Max),
+        stress_data.get_vertical_stress(LoadCase::SeismicLoad, SelectionMethod::Max),
         0.0
     );
 }

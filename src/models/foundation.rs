@@ -20,14 +20,14 @@ pub struct Foundation {
     pub foundation_width: f64,
     /// Area of the foundation (m²).
     pub foundation_area: Option<f64>,
-    /// Effective length of the foundation after load effects (m).
-    pub effective_length: Option<f64>,
-    /// Effective width of the foundation after load effects (m).
-    pub effective_width: Option<f64>,
     /// Foundation inclination angle (degrees).
     pub foundation_angle: Option<f64>,
     /// Slope angle of the ground (degrees).
     pub slope_angle: Option<f64>,
+    /// Effective length of the foundation after load effects (m).
+    pub effective_length: Option<f64>,
+    /// Effective width of the foundation after load effects (m).
+    pub effective_width: Option<f64>,
 }
 
 impl Default for Foundation {
@@ -46,6 +46,37 @@ impl Default for Foundation {
 }
 
 impl Foundation {
+    /// Creates a new `Foundation` instance.
+    ///
+    /// # Arguments
+    /// * `depth` - Depth of the foundation (m).
+    /// * `length` - Length of the foundation (m).
+    /// * `width` - Width of the foundation (m).
+    /// * `angle` - Foundation inclination angle (degrees).
+    /// * `slope` - Slope angle of the ground (degrees).
+    /// * `area` - Area of the foundation (m²).
+    ///
+    /// # Returns
+    /// A new `Foundation` instance.
+    pub fn new(
+        depth: f64,
+        length: f64,
+        width: f64,
+        angle: Option<f64>,
+        slope: Option<f64>,
+        area: Option<f64>,
+    ) -> Self {
+        Self {
+            foundation_depth: depth,
+            foundation_length: length,
+            foundation_width: width,
+            foundation_area: area,
+            foundation_angle: angle,
+            slope_angle: slope,
+            effective_length: None,
+            effective_width: None,
+        }
+    }
     /// Calculates effective lengths based on applied loads.
     ///
     /// # Arguments
