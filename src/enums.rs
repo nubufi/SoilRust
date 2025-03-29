@@ -22,3 +22,14 @@ pub enum LoadCase {
     UltimateLoad,
     SeismicLoad,
 }
+
+/// Analysis term
+///
+/// # Variants
+/// * `Short` - Short term analysis
+/// * `Long` - Long term analysis
+#[derive(Debug, Clone, Copy)]
+pub enum AnalysisTerm {
+    Short,
+    Long,
+}
