@@ -18,7 +18,7 @@ use super::{helper_functions::get_soil_params, model::*};
 ///
 /// # Returns
 /// * `Result<(), &'static str>`: Ok if valid, Err with a message if invalid.
-fn validate(
+fn validate_input(
     soil_profile: &SoilProfile,
     foundation: &Foundation,
     loading: &Loads,
@@ -242,7 +242,7 @@ pub fn calc_bearing_capacity(
     );
 
     // Validate input data
-    validate(soil_profile, foundation, loading, term).unwrap();
+    validate_input(soil_profile, foundation, loading, term).unwrap();
 
     let soil_params = get_soil_params(soil_profile, foundation, term);
     let phi = soil_params.friction_angle;

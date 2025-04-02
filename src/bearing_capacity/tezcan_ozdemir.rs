@@ -1,8 +1,8 @@
-use crate::models::{foundation::Foundation, loads::Loads, soil_profile::SoilProfile};
+use crate::models::{foundation::Foundation, soil_profile::SoilProfile};
 
 /// Represents the bearing capacity result for a given soil and foundation setup.
 #[derive(Debug)]
-pub struct Result {
+pub struct Output {
     /// Shear wave velocity (Vs) in m/s.
     pub vs: f64,
 
@@ -19,6 +19,26 @@ pub struct Result {
     pub safety_factor: f64,
 }
 
+fn validate_input(soil_profile: &SoilProfile, foundation: &Foundation) -> Result<(), &'static str> {
+    if soil_profile.layers.is_empty() {
+        return Err("Soil profile is empty.");
+    }
+
+    if foundation.foundation_depth <= 0.0 {
+        return Err("Foundation depth must be greater than zero.");
+    }
+
+    for layer in soil_profile.layers.iter() {
+        if layer.dry_unit_weight.is_none() {
+            return Err("Dry unit weight must be provided for all soil layers.");
+        }
+
+        if layer.saturated_unit_weight.is_none() {
+            return Err("Saturated unit weight must be provided for all soil layers.");
+        }
+    }
+    Ok(())
+}
 /// Retrieves the soil parameters (unit weight and shear wave velocity) at a given depth.
 ///
 /// # Arguments
@@ -57,7 +77,10 @@ pub fn calc_bearing_capacity(
     soil_profile: SoilProfile,
     foundation: Foundation,
     foundation_pressure: f64,
-) -> Result {
+) -> Output {
+    // Validate the input parameters
+    validate_input(&soil_profile, &foundation).unwrap();
+
     let df = foundation.foundation_depth;
     let (unit_weight, vs) = get_soil_parameters(df, soil_profile);
 
@@ -79,7 +102,7 @@ pub fn calc_bearing_capacity(
         }
     };
 
-    Result {
+    Output {
         vs,
         unit_weight,
         allowable_bearing_capacity: bearing_capacity,
