@@ -8,6 +8,16 @@ use crate::{
 
 use super::{helper_functions::get_soil_params, model::*};
 
+/// Validates the input data for bearing capacity calculations.
+///
+/// # Arguments
+/// * `soil_profile` - The soil profile data.
+/// * `foundation` - The foundation data.
+/// * `loading` - The applied loads.
+/// * `term` - Short or long-term condition.
+///
+/// # Returns
+/// * `Result<(), &'static str>`: Ok if valid, Err with a message if invalid.
 fn validate(
     soil_profile: &SoilProfile,
     foundation: &Foundation,
@@ -26,7 +36,7 @@ fn validate(
         return Err("Soil profile must contain at least one layer.");
     }
 
-    if soil_profile.layers.last().unwrap().depth.unwrap() < foundation.foundation_depth.unwrap() {
+    if soil_profile.layers.last().unwrap().depth.unwrap() < foundation.foundation_depth {
         return Err("Foundation depth exceeds soil profile depth.");
     }
 
@@ -102,8 +112,8 @@ pub fn calc_shape_factors(
     bearing_capacity_factors: BearingCapacityFactors,
     phi: f64,
 ) -> ShapeFactors {
-    let width = foundation.effective_width.unwrap();
-    let length = foundation.effective_length.unwrap();
+    let width = foundation.foundation_width;
+    let length = foundation.foundation_length;
     let w_l = width / length;
 
     let nc = bearing_capacity_factors.nc;
@@ -120,106 +130,62 @@ pub fn calc_shape_factors(
     ShapeFactors { sc, sq, sg }
 }
 
-/// Calculates the inclination factors (ic, iq, ig) for inclined loading conditions.
+/// Calculates the inclination factors (ic, iq, ig) for a foundation under inclined loading.
+///
+/// Based on Coduto et al. (Appendix 4), accounts for both cohesive and frictional soils.
+///
+/// # Arguments
+/// - `phi`: Internal friction angle of the soil in degrees.
+/// - `cohesion`: Cohesion of the soil in kPa.
+/// - `foundation`: Reference to the `Foundation` struct (must have effective width, length, and optionally base angle).
+/// - `loading`: Reference to the `Loads` struct (must have vertical load and optionally horizontal components).
+///
+/// # Returns
+/// - `InclinationFactors`: Struct containing `ic`, `iq`, and `ig`.
 pub fn calc_inclination_factors(
     phi: f64,
     cohesion: f64,
     foundation: &Foundation,
     loading: &Loads,
 ) -> InclinationFactors {
-    let base_angle = foundation.foundation_angle.unwrap_or(0.);
-    let w = foundation.effective_width.unwrap();
-    let l = foundation.effective_length.unwrap();
+    let w = foundation.foundation_width;
+    let l = foundation.foundation_length;
 
     let vertical_load = loading.vertical_load.unwrap();
     let vx = loading.horizontal_load_x.unwrap_or(0.);
     let vy = loading.horizontal_load_y.unwrap_or(0.);
     let vmax = vx.max(vy);
 
-    let area = w * l;
-    let w_l = w / l;
+    let w_effective = foundation.effective_width.unwrap();
+    let l_effective = foundation.effective_length.unwrap();
+    let area = w_effective * l_effective;
 
     let ca = cohesion * 0.75;
-    let m = (2.0 + w_l) / (1.0 + w_l);
+    let mb = (2. + w / l) / (1. + w / l);
+    let ml = (2. + l / w) / (1. + l / w);
+    let mut m = (mb.powi(2) + ml.powi(2)).sqrt();
+
+    if vx == 0. {
+        m = ml;
+    } else if vy == 0. {
+        m = mb;
+    }
 
     let factors = calc_bearing_capacity_factors(phi);
     let nc = factors.nc;
     let nq = factors.nq;
 
-    let mut ic = 1.0;
-    let mut iq = 1.0;
-    let mut ig = 1.0;
+    let mut ic = 1.0 - m * vmax / (area * ca * nc);
+    let mut iq = 1.;
+    let mut ig = 1.;
 
-    if base_angle > 0.0 {
-        if phi == 0.0 {
-            ic = 1.0 - m * vmax / (area * ca * nc);
-            iq = 1.0;
-            ig = 1.0;
-        } else {
-            let tan_phi = (phi.to_radians()).tan();
-            let tan_phi_inv = 1.0 / tan_phi;
-            let base_term = 1.0 - vmax / (vertical_load + area * ca * tan_phi_inv);
-            iq = base_term.powf(m);
-            ig = base_term.powf(m + 1.0);
-            ic = iq - (1.0 - iq) / (nq - 1.0);
-        }
+    if phi > 0. {
+        iq = (1. - vmax * phi.to_radians().tan() / (area * ca)).powf(m);
+        ic = iq - (1.0 - iq) / (nq - 1.0);
+        ig = (1. - vmax / (vertical_load + area * ca / phi.to_radians().tan())).powf(m);
     }
 
     InclinationFactors { ic, iq, ig }
-}
-
-/// Calculates the base inclination factors (bc, bq, bg) for a given friction angle and foundation geometry.
-///
-/// # Arguments
-/// * `phi` - Internal friction angle in degrees
-/// * `foundation` - Foundation struct with optional slope and foundation angles
-///
-/// # Returns
-/// * `BaseFactors`: The base inclination factors
-pub fn calc_base_factors(phi: f64, foundation: &Foundation) -> BaseFactors {
-    let slope_angle = foundation.slope_angle.unwrap_or(0.0);
-    let foundation_angle = foundation.foundation_angle.unwrap_or(0.0);
-
-    let slope_rad = slope_angle.to_radians();
-    let phi_rad = phi.to_radians();
-    let base_rad = foundation_angle.to_radians();
-
-    let bc = if phi == 0.0 {
-        1.0 - slope_rad / 5.14
-    } else {
-        1.0 - 2.0 * slope_rad / (5.14 * phi_rad.tan())
-    };
-
-    let bq = (1.0 - base_rad * phi_rad.tan()).powi(2);
-    let bg = bq;
-
-    BaseFactors { bc, bq, bg }
-}
-
-/// Calculates the ground modification factors (gc, gq, gg) due to slope.
-///
-/// # Arguments
-/// * `iq` - Load inclination factor (between 0 and 1)
-/// * `slope_angle` - Slope angle in degrees
-/// * `phi` - Soil friction angle in degrees
-///
-/// # Returns
-/// * `GroundFactors` with gc, gq, and gg
-pub fn calc_ground_factors(iq: f64, slope_angle: f64, phi: f64) -> GroundFactors {
-    let slope_rad = slope_angle.to_radians();
-    let phi_rad = phi.to_radians();
-
-    let gc = if phi == 0.0 {
-        1.0 - slope_rad / 5.14
-    } else {
-        iq - (1.0 - iq) / (5.14 * phi_rad.tan())
-    };
-
-    let tan_beta = slope_rad.tan();
-    let gq = (1.0 - tan_beta).powi(2);
-    let gg = gq;
-
-    GroundFactors { gc, gq, gg }
 }
 
 /// Calculates the depth factors (dc, dq, dg) based on foundation geometry and soil friction angle.
@@ -244,7 +210,7 @@ pub fn calc_depth_factors(foundation: &Foundation, phi: f64) -> DepthFactors {
     let tan_phi = phi_rad.tan();
     let sin_phi = phi_rad.sin();
 
-    let dc = 1.0 + 0.4 * db;
+    let dc = if phi == 0. { 0.4 * db } else { 1.0 + 0.4 * db };
     let dq = 1.0 + 2.0 * tan_phi * (1.0 - sin_phi).powi(2) * db;
     let dg = 1.0;
 
@@ -288,28 +254,18 @@ pub fn calc_bearing_capacity(
     let bearing_capacity_factors = calc_bearing_capacity_factors(phi);
     let shape_factors = calc_shape_factors(foundation, bearing_capacity_factors, phi);
     let inclination_factors = calc_inclination_factors(phi, cohesion, foundation, loading);
-    let base_factors = calc_base_factors(phi, foundation);
-    let ground_factors = calc_ground_factors(
-        inclination_factors.iq,
-        foundation.slope_angle.unwrap_or(0.0),
-        phi,
-    );
     let depth_factors = calc_depth_factors(foundation, phi);
 
     let part_1 = cohesion
         * bearing_capacity_factors.nc
         * shape_factors.sc
         * depth_factors.dc
-        * base_factors.bc
-        * ground_factors.gc
         * inclination_factors.ic;
 
     let part_2 = effective_surcharge
         * bearing_capacity_factors.nq
         * shape_factors.sq
         * depth_factors.dq
-        * base_factors.bq
-        * ground_factors.gq
         * inclination_factors.iq;
 
     let part_3 = 0.5
@@ -318,8 +274,6 @@ pub fn calc_bearing_capacity(
         * bearing_capacity_factors.ng
         * shape_factors.sg
         * depth_factors.dg
-        * base_factors.bg
-        * ground_factors.gg
         * inclination_factors.ig;
 
     let q_ult = part_1 + part_2 + part_3;
@@ -332,11 +286,19 @@ pub fn calc_bearing_capacity(
         shape_factors,
         depth_factors,
         load_inclination_factors: inclination_factors,
-        ground_factors,
-        base_factors,
         soil_params,
         ultimate_bearing_capacity: q_ult,
         allowable_bearing_capacity: q_allow,
         is_safe,
+        ground_factors: GroundFactors {
+            gc: 1.,
+            gq: 1.,
+            gg: 1.,
+        },
+        base_factors: BaseFactors {
+            bc: 1.,
+            bq: 1.,
+            bg: 1.,
+        },
     }
 }

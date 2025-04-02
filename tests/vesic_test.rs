@@ -56,8 +56,8 @@ fn test_calc_bearing_capacity_factors_4() {
 fn test_calc_shape_factors_1() {
     let foundation = Foundation {
         foundation_depth: 1.0,
-        effective_width: Some(2.0),
-        effective_length: Some(4.0),
+        foundation_width: 2.0,
+        foundation_length: 4.0,
         ..Foundation::default()
     };
 
@@ -78,8 +78,8 @@ fn test_calc_shape_factors_1() {
 fn test_calc_shape_factors_2() {
     let foundation = Foundation {
         foundation_depth: 1.0,
-        effective_width: Some(3.0),
-        effective_length: Some(6.0),
+        foundation_width: 3.0,
+        foundation_length: 6.0,
         ..Foundation::default()
     };
 
@@ -100,8 +100,8 @@ fn test_calc_shape_factors_2() {
 fn test_calc_shape_factors_3() {
     let foundation = Foundation {
         foundation_depth: 1.0,
-        effective_width: Some(5.0),
-        effective_length: Some(5.0),
+        foundation_width: 5.0,
+        foundation_length: 5.0,
         ..Foundation::default()
     };
 
@@ -122,8 +122,8 @@ fn test_calc_shape_factors_3() {
 fn test_calc_shape_factors_4() {
     let foundation = Foundation {
         foundation_depth: 1.0,
-        effective_width: Some(4.0),
-        effective_length: Some(10.0),
+        foundation_width: 4.0,
+        foundation_length: 10.0,
         ..Foundation::default()
     };
 
@@ -146,7 +146,6 @@ fn test_calc_inclination_factors_1() {
         foundation_depth: 1.0,
         foundation_width: 4.0,
         foundation_length: 6.0,
-        foundation_angle: Some(10.0),
         effective_width: Some(4.0),
         effective_length: Some(6.0),
         ..Default::default()
@@ -172,7 +171,6 @@ fn test_calc_inclination_factors_2() {
         foundation_depth: 1.0,
         foundation_width: 5.0,
         foundation_length: 10.0,
-        foundation_angle: Some(15.0),
         effective_width: Some(5.0),
         effective_length: Some(10.0),
         ..Default::default()
@@ -198,7 +196,6 @@ fn test_calc_inclination_factors_3() {
         foundation_depth: 1.0,
         foundation_width: 3.0,
         foundation_length: 8.0,
-        foundation_angle: Some(20.0),
         effective_width: Some(3.0),
         effective_length: Some(8.0),
         ..Default::default()
@@ -224,7 +221,6 @@ fn test_calc_inclination_factors_4() {
         foundation_depth: 1.0,
         foundation_width: 3.0,
         foundation_length: 6.0,
-        foundation_angle: Some(0.0),
         effective_width: Some(3.0),
         effective_length: Some(6.0),
         ..Default::default()
@@ -241,118 +237,6 @@ fn test_calc_inclination_factors_4() {
     assert!((result.ic - 1.0).abs() < 1e-3);
     assert!((result.iq - 1.0).abs() < 1e-3);
     assert!((result.ig - 1.0).abs() < 1e-3);
-}
-// --------------------------------------------------------------
-/// Case 1: φ = 0°, slope = 10°, base = 5° → bc < 1, bq = bg = 1
-#[test]
-fn test_calc_base_factors_1() {
-    let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
-        foundation_angle: Some(5.0),
-        slope_angle: Some(10.0),
-        ..Default::default()
-    };
-
-    let result = calc_base_factors(0.0, &foundation);
-
-    assert!((result.bc - 0.966).abs() < 1e-3);
-    assert!((result.bq - 1.0).abs() < 1e-3);
-    assert!((result.bg - 1.0).abs() < 1e-3);
-}
-
-/// Case 2: φ = 30°, slope = 10°, base = 5°
-#[test]
-fn test_calc_base_factors_2() {
-    let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
-        foundation_angle: Some(5.0),
-        slope_angle: Some(10.0),
-        ..Default::default()
-    };
-
-    let result = calc_base_factors(30.0, &foundation);
-
-    assert!((result.bc - 0.882).abs() < 1e-3);
-    assert!((result.bq - 0.902).abs() < 1e-3);
-    assert!((result.bg - 0.902).abs() < 1e-3);
-}
-
-/// Case 3: φ = 45°, slope = 20°, base = 10°
-#[test]
-fn test_calc_base_factors_3() {
-    let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
-        foundation_angle: Some(10.0),
-        slope_angle: Some(20.0),
-        ..Default::default()
-    };
-
-    let result = calc_base_factors(45.0, &foundation);
-
-    assert!((result.bc - 0.864).abs() < 1e-3);
-    assert!((result.bq - 0.681).abs() < 1e-3);
-    assert!((result.bg - 0.681).abs() < 1e-3);
-}
-
-/// Case 4: φ = 15°, slope = 5°, base = 2°
-#[test]
-fn test_calc_base_factors_4() {
-    let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
-        foundation_angle: Some(2.0),
-        slope_angle: Some(5.0),
-        ..Default::default()
-    };
-
-    let result = calc_base_factors(15.0, &foundation);
-
-    assert!((result.bc - 0.873).abs() < 1e-3);
-    assert!((result.bq - 0.981).abs() < 1e-3);
-    assert!((result.bg - 0.981).abs() < 1e-3);
-}
-// --------------------------------------------------------------
-/// Case 1: φ = 0°, iq = 1.0, slope = 10° → basic cohesive slope condition
-#[test]
-fn test_calc_ground_factors_1() {
-    let result = calc_ground_factors(1.0, 10.0, 0.0);
-    assert!((result.gc - 0.966).abs() < 1e-3);
-    assert!((result.gq - 0.678).abs() < 1e-3);
-    assert!((result.gg - 0.678).abs() < 1e-3);
-}
-
-/// Case 2: φ = 30°, iq = 0.9, slope = 15°
-#[test]
-fn test_calc_ground_factors_2() {
-    let result = calc_ground_factors(0.9, 15.0, 30.0);
-    assert!((result.gc - 0.866).abs() < 1e-3);
-    assert!((result.gq - 0.536).abs() < 1e-3);
-    assert!((result.gg - 0.536).abs() < 1e-3);
-}
-
-/// Case 3: φ = 45°, iq = 0.8, slope = 20°
-#[test]
-fn test_calc_ground_factors_3() {
-    let result = calc_ground_factors(0.8, 20.0, 45.0);
-    assert!((result.gc - 0.7611).abs() < 1e-3);
-    assert!((result.gq - 0.4045).abs() < 1e-3);
-    assert!((result.gg - 0.4045).abs() < 1e-3);
-}
-
-/// Case 4: φ = 15°, iq = 0.95, slope = 5°
-#[test]
-fn test_calc_ground_factors_4() {
-    let result = calc_ground_factors(0.95, 5.0, 15.0);
-    assert!((result.gc - 0.914).abs() < 1e-3);
-    assert!((result.gq - 0.833).abs() < 1e-3);
-    assert!((result.gg - 0.833).abs() < 1e-3);
 }
 // --------------------------------------------------------------
 /// Case 1: φ = 0°, Df/B = 0.5 → dq = 1.0, dc = 1.2, dg = 1.0
