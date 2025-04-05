@@ -8,7 +8,7 @@
 /// * `foundation_area` - Area of the foundation (m²).
 /// * `effective_length` - Effective length of the foundation after load effects (m).
 /// * `effective_width` - Effective width of the foundation after load effects (m).
-/// * `foundation_angle` - Foundation inclination angle (degrees).
+/// * `base_tilt_angle` - Foundation inclination angle (degrees).
 /// * `slope_angle` - Slope angle of the ground (degrees).
 #[derive(Debug, Clone)]
 pub struct Foundation {
@@ -21,7 +21,7 @@ pub struct Foundation {
     /// Area of the foundation (m²).
     pub foundation_area: Option<f64>,
     /// Foundation inclination angle (degrees).
-    pub foundation_angle: Option<f64>,
+    pub base_tilt_angle: Option<f64>,
     /// Slope angle of the ground (degrees).
     pub slope_angle: Option<f64>,
     /// Effective length of the foundation after load effects (m).
@@ -39,7 +39,7 @@ impl Default for Foundation {
             foundation_area: None,
             effective_length: None,
             effective_width: None,
-            foundation_angle: None,
+            base_tilt_angle: None,
             slope_angle: None,
         }
     }
@@ -71,7 +71,7 @@ impl Foundation {
             foundation_length: length,
             foundation_width: width,
             foundation_area: area,
-            foundation_angle: angle,
+            base_tilt_angle: angle,
             slope_angle: slope,
             effective_length: None,
             effective_width: None,

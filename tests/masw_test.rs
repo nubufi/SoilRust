@@ -93,13 +93,13 @@ fn test_get_idealized_exp_min_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert!((layer1.thickness - 1.5).abs() < 1e-6);
-    assert!((layer1.vs - 160.0).abs() < 1e-6);
-    assert!((layer1.vp - 390.0).abs() < 1e-6);
+    assert_eq!(layer1.thickness, 1.5);
+    assert_eq!(layer1.vs, 160.0);
+    assert_eq!(layer1.vp, 390.0);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert!((last_layer.depth - 6.0).abs() < 1e-6);
+    assert_eq!(last_layer.depth, 6.0);
 }
 
 #[test]
@@ -117,13 +117,13 @@ fn test_get_idealized_exp_avg_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert!((layer1.thickness - 1.5).abs() < 1e-6);
-    assert!((layer1.vs - 170.0).abs() < 1e-6);
-    assert!((layer1.vp - 395.0).abs() < 1e-6);
+    assert_eq!(layer1.thickness, 1.5);
+    assert_eq!(layer1.vs, 170.0);
+    assert_eq!(layer1.vp, 395.0);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert!((last_layer.depth - 6.0).abs() < 1e-6);
+    assert_eq!(last_layer.depth, 6.0);
 }
 
 #[test]
@@ -141,11 +141,11 @@ fn test_get_idealized_exp_max_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert!((layer1.thickness - 1.5).abs() < 1e-6);
-    assert!((layer1.vs - 180.0).abs() < 1e-6);
-    assert!((layer1.vp - 400.0).abs() < 1e-6);
+    assert_eq!(layer1.thickness, 1.5);
+    assert_eq!(layer1.vs, 180.0);
+    assert_eq!(layer1.vp, 400.0);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert!((last_layer.depth - 6.0).abs() < 1e-6);
+    assert_eq!(last_layer.depth, 6.0);
 }

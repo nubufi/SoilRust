@@ -1,3 +1,4 @@
+use approx::assert_abs_diff_eq;
 use soilrust::enums::SelectionMethod;
 use soilrust::models::cpt::*;
 
@@ -7,7 +8,7 @@ fn test_calc_friction_ratio_valid() {
     layer.calc_friction_ratio();
     assert!(layer.friction_ratio.is_some());
     let rf = layer.friction_ratio.unwrap();
-    assert!((rf - 5.0).abs() < 1e-6); // 0.5 / 10.0 * 100 = 5.0%
+    assert_abs_diff_eq!(rf, 5.0, epsilon = 1e-6); // 0.5 / 10.0 * 100 = 5.0%
 }
 
 #[test]
@@ -88,7 +89,6 @@ fn test_get_idealized_exp_min_mode() {
 
     let ideal = cpt.get_idealized_exp(SelectionMethod::Min, "Ideal_Min".into());
 
-    println!("{:?}", ideal);
     // Sanity checks
     assert_eq!(ideal.name, "Ideal_Min");
 
@@ -97,13 +97,13 @@ fn test_get_idealized_exp_min_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert!((layer1.depth - 1.5).abs() < 1e-6);
-    assert!((layer1.cone_resistance - 150.0).abs() < 1e-6);
-    assert!((layer1.sleeve_friction - 380.0).abs() < 1e-6);
+    assert_abs_diff_eq!(layer1.depth, 1.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.cone_resistance, 150., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.sleeve_friction, 380., epsilon = 1e-6);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert!((last_layer.depth - 6.5).abs() < 1e-6);
+    assert_abs_diff_eq!(last_layer.depth, 6.5, epsilon = 1e-6);
 }
 
 #[test]
@@ -112,7 +112,6 @@ fn test_get_idealized_exp_avg_mode() {
 
     let ideal = cpt.get_idealized_exp(SelectionMethod::Avg, "Ideal_Avg".into());
 
-    println!("{:?}", ideal);
     // Sanity checks
     assert_eq!(ideal.name, "Ideal_Avg");
 
@@ -121,13 +120,13 @@ fn test_get_idealized_exp_avg_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert!((layer1.depth - 1.5).abs() < 1e-6);
-    assert!((layer1.cone_resistance - 155.0).abs() < 1e-6);
-    assert!((layer1.sleeve_friction - 385.0).abs() < 1e-6);
+    assert_abs_diff_eq!(layer1.depth, 1.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.cone_resistance, 155., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.sleeve_friction, 385., epsilon = 1e-6);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert!((last_layer.depth - 6.5).abs() < 1e-6);
+    assert_abs_diff_eq!(last_layer.depth, 6.5, epsilon = 1e-6);
 }
 
 #[test]
@@ -145,11 +144,11 @@ fn test_get_idealized_exp_max_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert!((layer1.depth - 1.5).abs() < 1e-6);
-    assert!((layer1.cone_resistance - 160.0).abs() < 1e-6);
-    assert!((layer1.sleeve_friction - 390.0).abs() < 1e-6);
+    assert_abs_diff_eq!(layer1.depth, 1.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.cone_resistance, 160., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.sleeve_friction, 390., epsilon = 1e-6);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert!((last_layer.depth - 6.5).abs() < 1e-6);
+    assert_abs_diff_eq!(last_layer.depth, 6.5, epsilon = 1e-6);
 }

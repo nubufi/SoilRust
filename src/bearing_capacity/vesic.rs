@@ -58,6 +58,15 @@ fn validate_input(
                 if layer.phi_u.is_none() {
                     return Err("Undrained friction angle (phi_u) must be provided for short-term analysis.");
                 }
+                if layer.phi_u.unwrap() < 0.0 {
+                    return Err("Undrained friction angle (phi_u) must be non-negative.");
+                }
+                if layer.cu.unwrap() < 0.0 {
+                    return Err("Undrained cohesion (cu) must be non-negative.");
+                }
+                if layer.cu.unwrap() == 0. && layer.phi_u.unwrap() == 0. {
+                    return Err("Either undrained cohesion (cu) or undrained friction angle (phi_u) must be greater than zero.");
+                }
             }
             AnalysisTerm::Long => {
                 if layer.c_prime.is_none() {
@@ -67,6 +76,15 @@ fn validate_input(
                     return Err(
                         "Effective friction angle (phi') must be provided for long-term analysis.",
                     );
+                }
+                if layer.phi_prime.unwrap() < 0.0 {
+                    return Err("Effective friction angle (phi') must be non-negative.");
+                }
+                if layer.c_prime.unwrap() < 0.0 {
+                    return Err("Effective cohesion (c') must be non-negative.");
+                }
+                if layer.c_prime.unwrap() == 0. && layer.phi_prime.unwrap() == 0. {
+                    return Err("Either effective cohesion (c') or effective friction angle (phi') must be greater than zero.");
                 }
             }
         }
@@ -119,15 +137,48 @@ pub fn calc_shape_factors(
     let nc = bearing_capacity_factors.nc;
     let nq = bearing_capacity_factors.nq;
 
-    let sc = 1.0 + w_l * (nq / nc);
-    let sq = 1.0 + w_l * (phi.to_radians().tan());
+    let sc = if phi == 0. {
+        0.2 * w_l
+    } else {
+        1.0 + w_l * (nq / nc)
+    };
+    let sq = 1.0 + w_l * (phi.to_radians().sin());
 
-    let mut sg = 1.0 - 0.4 * w_l;
-    if sg < 0.6 {
-        sg = 0.6;
+    let sg = 1.0 - 0.4 * w_l;
+
+    ShapeFactors {
+        sc,
+        sq,
+        sg: sg.max(0.6),
     }
+}
 
-    ShapeFactors { sc, sq, sg }
+/// Calculates the base inclination factors (bc, bq, bg) for a given friction angle and foundation geometry.
+///
+/// # Arguments
+/// * `phi` - Internal friction angle in degrees
+/// * `foundation` - Foundation struct with optional slope and foundation angles
+///
+/// # Returns
+/// * `BaseFactors`: The base inclination factors
+pub fn calc_base_factors(phi: f64, foundation: &Foundation) -> BaseFactors {
+    let slope_angle = foundation.slope_angle.unwrap_or(0.0);
+    let base_tilt_angle = foundation.base_tilt_angle.unwrap_or(0.0);
+
+    let slope_rad = slope_angle.to_radians();
+    let phi_rad = phi.to_radians();
+    let base_rad = base_tilt_angle.to_radians();
+
+    let bc = if phi == 0.0 {
+        slope_rad / 5.14
+    } else {
+        1.0 - 2.0 * slope_rad / (5.14 * phi_rad.tan())
+    };
+
+    let bq = (1.0 - base_rad * phi_rad.tan()).powi(2);
+    let bg = bq;
+
+    BaseFactors { bc, bq, bg }
 }
 
 /// Calculates the inclination factors (ic, iq, ig) for a foundation under inclined loading.
@@ -137,6 +188,7 @@ pub fn calc_shape_factors(
 /// # Arguments
 /// - `phi`: Internal friction angle of the soil in degrees.
 /// - `cohesion`: Cohesion of the soil in kPa.
+/// - `bearing_capacity_factors`: Reference to the `BearingCapacityFactors` struct.
 /// - `foundation`: Reference to the `Foundation` struct (must have effective width, length, and optionally base angle).
 /// - `loading`: Reference to the `Loads` struct (must have vertical load and optionally horizontal components).
 ///
@@ -145,6 +197,7 @@ pub fn calc_shape_factors(
 pub fn calc_inclination_factors(
     phi: f64,
     cohesion: f64,
+    bearing_capacity_factors: BearingCapacityFactors,
     foundation: &Foundation,
     loading: &Loads,
 ) -> InclinationFactors {
@@ -152,38 +205,45 @@ pub fn calc_inclination_factors(
     let l = foundation.foundation_length;
 
     let vertical_load = loading.vertical_load.unwrap();
-    let vx = loading.horizontal_load_x.unwrap_or(0.);
-    let vy = loading.horizontal_load_y.unwrap_or(0.);
-    let vmax = vx.max(vy);
+    let hb = loading.horizontal_load_x.unwrap_or(0.);
+    let hl = loading.horizontal_load_y.unwrap_or(0.);
+    let hi = hb + hl;
 
-    let w_effective = foundation.effective_width.unwrap();
-    let l_effective = foundation.effective_length.unwrap();
-    let area = w_effective * l_effective;
+    let effective_width = foundation.effective_width.unwrap();
+    let effective_length = foundation.effective_length.unwrap();
+    let area = effective_length * effective_width;
 
     let ca = cohesion * 0.75;
     let mb = (2. + w / l) / (1. + w / l);
     let ml = (2. + l / w) / (1. + l / w);
     let mut m = (mb.powi(2) + ml.powi(2)).sqrt();
 
-    if vx == 0. {
+    if hb == 0. {
         m = ml;
-    } else if vy == 0. {
+    } else if hl == 0. {
         m = mb;
     }
 
-    let factors = calc_bearing_capacity_factors(phi);
-    let nc = factors.nc;
-    let nq = factors.nq;
+    let nc = bearing_capacity_factors.nc;
+    let nq = bearing_capacity_factors.nq;
 
-    let mut ic = 1.0 - m * vmax / (area * ca * nc);
-    let mut iq = 1.;
-    let mut ig = 1.;
+    let iq = if phi == 0. {
+        1.
+    } else {
+        (1. - hi / (vertical_load + area * ca / phi.to_radians().tan())).powf(m)
+    };
 
-    if phi > 0. {
-        iq = (1. - vmax * phi.to_radians().tan() / (area * ca)).powf(m);
-        ic = iq - (1.0 - iq) / (nq - 1.0);
-        ig = (1. - vmax / (vertical_load + area * ca / phi.to_radians().tan())).powf(m);
-    }
+    let ic = if phi == 0. {
+        1.0 - m * hi / (area * ca * nc)
+    } else {
+        iq - (1.0 - iq) / (nq - 1.0)
+    };
+
+    let ig = if phi == 0. {
+        1.
+    } else {
+        (1. - hi / (vertical_load + area * ca / phi.to_radians().tan())).powf(m + 1.)
+    };
 
     InclinationFactors { ic, iq, ig }
 }
@@ -198,12 +258,12 @@ pub fn calc_inclination_factors(
 /// * `DepthFactors`: dc, dq, dg coefficients
 pub fn calc_depth_factors(foundation: &Foundation, phi: f64) -> DepthFactors {
     let df = foundation.foundation_depth;
-    let w = foundation.effective_width.unwrap();
+    let w = foundation.foundation_width;
 
     let db = if df / w <= 1.0 {
         df / w
     } else {
-        (df / w).atan()
+        (df / w).to_radians().atan()
     };
 
     let phi_rad = phi.to_radians();
@@ -215,6 +275,32 @@ pub fn calc_depth_factors(foundation: &Foundation, phi: f64) -> DepthFactors {
     let dg = 1.0;
 
     DepthFactors { dc, dq, dg }
+}
+
+/// Calculates the ground modification factors (gc, gq, gg) due to slope.
+///
+/// # Arguments
+/// * `iq` - Load inclination factor (between 0 and 1)
+/// * `slope_angle` - Slope angle in degrees
+/// * `phi` - Soil friction angle in degrees
+///
+/// # Returns
+/// * `GroundFactors` with gc, gq, and gg
+pub fn calc_ground_factors(iq: f64, slope_angle: f64, phi: f64) -> GroundFactors {
+    let slope_rad = slope_angle.to_radians();
+    let phi_rad = phi.to_radians();
+
+    let gc = if phi == 0.0 {
+        slope_rad / 5.14
+    } else {
+        iq - (1.0 - iq) / (5.14 * phi_rad.tan())
+    };
+
+    let tan_beta = slope_rad.tan();
+    let gq = (1.0 - tan_beta).powi(2);
+    let gg = gq;
+
+    GroundFactors { gc, gq, gg }
 }
 
 /// Calculates the ultimate and allowable bearing capacity of a foundation.
@@ -253,30 +339,53 @@ pub fn calc_bearing_capacity(
 
     let bearing_capacity_factors = calc_bearing_capacity_factors(phi);
     let shape_factors = calc_shape_factors(foundation, bearing_capacity_factors, phi);
-    let inclination_factors = calc_inclination_factors(phi, cohesion, foundation, loading);
+    let inclination_factors =
+        calc_inclination_factors(phi, cohesion, bearing_capacity_factors, foundation, loading);
     let depth_factors = calc_depth_factors(foundation, phi);
+    let base_factors = calc_base_factors(phi, foundation);
+    let ground_factors = calc_ground_factors(
+        inclination_factors.iq,
+        foundation.slope_angle.unwrap_or(0.0),
+        phi,
+    );
 
-    let part_1 = cohesion
-        * bearing_capacity_factors.nc
-        * shape_factors.sc
-        * depth_factors.dc
-        * inclination_factors.ic;
+    let q_ult = if phi == 0. {
+        5.14 * cohesion
+            * (1. + shape_factors.sc + depth_factors.dc
+                - inclination_factors.ic
+                - base_factors.bc
+                - ground_factors.gc)
+            + effective_surcharge
+    } else {
+        let part_1 = cohesion
+            * bearing_capacity_factors.nc
+            * shape_factors.sc
+            * depth_factors.dc
+            * base_factors.bc
+            * ground_factors.gc
+            * inclination_factors.ic;
 
-    let part_2 = effective_surcharge
-        * bearing_capacity_factors.nq
-        * shape_factors.sq
-        * depth_factors.dq
-        * inclination_factors.iq;
+        let part_2 = effective_surcharge
+            * bearing_capacity_factors.nq
+            * shape_factors.sq
+            * depth_factors.dq
+            * base_factors.bq
+            * ground_factors.gq
+            * inclination_factors.iq;
 
-    let part_3 = 0.5
-        * effective_unit_weight
-        * foundation.effective_width.unwrap()
-        * bearing_capacity_factors.ng
-        * shape_factors.sg
-        * depth_factors.dg
-        * inclination_factors.ig;
+        let part_3 = 0.5
+            * effective_unit_weight
+            * foundation.effective_width.unwrap()
+            * bearing_capacity_factors.ng
+            * shape_factors.sg
+            * depth_factors.dg
+            * base_factors.bg
+            * ground_factors.gg
+            * inclination_factors.ig;
 
-    let q_ult = part_1 + part_2 + part_3;
+        part_1 + part_2 + part_3
+    };
+
     let q_allow = q_ult / factor_of_safety;
 
     let is_safe = loading.vertical_load.unwrap_or(0.0) <= q_allow;
@@ -290,15 +399,7 @@ pub fn calc_bearing_capacity(
         ultimate_bearing_capacity: q_ult,
         allowable_bearing_capacity: q_allow,
         is_safe,
-        ground_factors: GroundFactors {
-            gc: 1.,
-            gq: 1.,
-            gg: 1.,
-        },
-        base_factors: BaseFactors {
-            bc: 1.,
-            bq: 1.,
-            bg: 1.,
-        },
+        ground_factors,
+        base_factors,
     }
 }

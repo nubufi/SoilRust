@@ -1,3 +1,4 @@
+use approx::assert_abs_diff_eq;
 use soilrust::{
     enums::{LoadCase, SelectionMethod},
     models::loads::{Loads, Stress},
@@ -14,8 +15,8 @@ fn test_calc_eccentricity() {
 
     let (ex, ey) = loading.calc_eccentricity();
 
-    assert!((ex - 2.).abs() < 1e-6);
-    assert!((ey - 1.5).abs() < 1e-6);
+    assert_abs_diff_eq!(ex, 2., epsilon = 1e-6);
+    assert_abs_diff_eq!(ey, 1.5, epsilon = 1e-6);
 }
 
 #[test]

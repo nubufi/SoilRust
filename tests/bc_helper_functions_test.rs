@@ -1,3 +1,4 @@
+use approx::assert_abs_diff_eq;
 use soilrust::bearing_capacity::helper_functions::*;
 use soilrust::enums::AnalysisTerm;
 use soilrust::models::foundation::Foundation;
@@ -17,8 +18,8 @@ fn test_compute_equivalent_unit_weights_1() {
         }],
     };
     let (gamma_1, gamma_2) = compute_equivalent_unit_weights(&profile, 5.0);
-    assert!((gamma_1 - 1.8).abs() < 1e-3);
-    assert!((gamma_2 - 2.0).abs() < 1e-3);
+    assert_abs_diff_eq!(gamma_1, 1.8, epsilon = 1e-3);
+    assert_abs_diff_eq!(gamma_2, 2.0, epsilon = 1e-3);
 }
 
 // Test for 2 layers

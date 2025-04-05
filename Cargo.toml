@@ -17,6 +17,7 @@ ordered-float = "5"
 
 [dev-dependencies]
 criterion = "0.5.1"  # For benchmarking
+approx = "0.5.1"  # For approximate equality in tests
 
 [profile.release]
 opt-level = 3
