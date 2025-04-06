@@ -6,10 +6,10 @@ pub struct Output {
     /// Shear wave velocity (Vs) in m/s.
     pub vs: f64,
 
-    /// Unit weight of the soil in kN/m³.
+    /// Unit weight of the soil in t/m³.
     pub unit_weight: f64,
 
-    /// Allowable bearing capacity in kPa.
+    /// Allowable bearing capacity in ton/m2.
     pub allowable_bearing_capacity: f64,
 
     /// Indicates whether the bearing capacity is safe.
