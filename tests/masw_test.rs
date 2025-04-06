@@ -17,9 +17,9 @@ fn test_calc_depths() {
     };
     masw_exp.calc_depths();
 
-    assert_eq!(masw_exp.layers[0].depth, 1.5);
-    assert_eq!(masw_exp.layers[1].depth, 4.0);
-    assert_eq!(masw_exp.layers[2].depth, 8.0);
+    assert_eq!(masw_exp.layers[0].depth, Some(1.5));
+    assert_eq!(masw_exp.layers[1].depth, Some(4.0));
+    assert_eq!(masw_exp.layers[2].depth, Some(8.0));
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn test_get_idealized_exp_min_mode() {
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert_eq!(last_layer.depth, 6.0);
+    assert_eq!(last_layer.depth, Some(6.0));
 }
 
 #[test]
@@ -123,7 +123,7 @@ fn test_get_idealized_exp_avg_mode() {
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert_eq!(last_layer.depth, 6.0);
+    assert_eq!(last_layer.depth, Some(6.0));
 }
 
 #[test]
@@ -147,5 +147,5 @@ fn test_get_idealized_exp_max_mode() {
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert_eq!(last_layer.depth, 6.0);
+    assert_eq!(last_layer.depth, Some(6.0));
 }

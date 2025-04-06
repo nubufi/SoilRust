@@ -21,7 +21,7 @@ fn create_masw_exp(vs: f64) -> MaswExp {
     MaswExp {
         layers: vec![MaswLayer {
             thickness: 5.0,
-            depth: 5.0,
+            depth: Some(5.0),
             vs,
             vp: 0.0,
         }],

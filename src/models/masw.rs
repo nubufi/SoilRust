@@ -15,7 +15,7 @@ pub struct MaswLayer {
     pub thickness: f64,
     pub vs: f64,
     pub vp: f64,
-    pub depth: f64,
+    pub depth: Option<f64>,
 }
 
 impl MaswLayer {
@@ -24,7 +24,7 @@ impl MaswLayer {
             thickness,
             vs,
             vp,
-            depth: 0.0,
+            depth: None,
         }
     }
 }
@@ -69,7 +69,7 @@ impl MaswExp {
                 panic!("Thickness of MASW experiment must be greater than zero.");
             }
 
-            exp.depth = bottom + exp.thickness;
+            exp.depth = Some(bottom + exp.thickness);
             bottom += exp.thickness;
         }
     }
@@ -89,7 +89,7 @@ impl MaswExp {
     pub fn get_layer_at_depth(&self, depth: f64) -> &MaswLayer {
         self.layers
             .iter()
-            .find(|exp| exp.depth >= depth)
+            .find(|exp| exp.depth.unwrap() >= depth)
             .unwrap_or_else(|| self.layers.last().unwrap())
     }
 }
@@ -104,7 +104,10 @@ pub struct Masw {
 }
 
 impl Masw {
-    pub fn new(exps: Vec<MaswExp>) -> Self {
+    pub fn new(mut exps: Vec<MaswExp>) -> Self {
+        for exp in &mut exps {
+            exp.calc_depths();
+        }
         Self { exps }
     }
 
@@ -131,7 +134,7 @@ impl Masw {
         unique_depths.insert(OrderedFloat(0.0)); // Add the surface depth
         for exp in &self.exps {
             for layer in &exp.layers {
-                unique_depths.insert(OrderedFloat(layer.depth));
+                unique_depths.insert(OrderedFloat(layer.depth.unwrap()));
             }
         }
 
