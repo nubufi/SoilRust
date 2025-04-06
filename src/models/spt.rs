@@ -1,9 +1,10 @@
 use crate::enums::SelectionMethod;
 use ordered_float::OrderedFloat;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NValue {
     Value(i32),
     Refusal,
@@ -90,7 +91,7 @@ impl Ord for NValue {
     }
 }
 // -------------------------------------------------------------------------------------------
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SPTBlow {
     pub depth: f64,
     pub n1: NValue,
@@ -191,7 +192,7 @@ impl SPTBlow {
     }
 }
 // -------------------------------------------------------------------------------------------
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SPTExp {
     pub blows: Vec<SPTBlow>,
     pub name: String,
@@ -244,7 +245,7 @@ impl SPTExp {
 
 // -------------------------------------------------------------------------------------------
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SPT {
     pub exps: Vec<SPTExp>,
     pub energy_correction_factor: f64,

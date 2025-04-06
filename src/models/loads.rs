@@ -1,4 +1,5 @@
 use crate::enums::{LoadCase, SelectionMethod};
+use serde::{Deserialize, Serialize};
 
 /// Stress values in ton/m^2
 ///
@@ -6,7 +7,7 @@ use crate::enums::{LoadCase, SelectionMethod};
 /// * `min` - Minimum vertical stress in ton/m^2
 /// * `avg` - Average vertical stress in ton/m^2
 /// * `max` - Maximum vertical stress in ton/m^2
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct Stress {
     pub min: Option<f64>,
     pub avg: Option<f64>,
@@ -24,7 +25,7 @@ pub struct Stress {
 /// * `moment_x` - Moment in x-direction in ton.m
 /// * `moment_y` - Moment in y-direction in ton.m
 /// * `vertical_load` - Vertical load in ton
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Loads {
     pub service_load: Stress,
     pub ultimate_load: Stress,

@@ -1,5 +1,6 @@
 use crate::enums::SelectionMethod;
 use ordered_float::OrderedFloat;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 /// Represents an individual MASW (Multichannel Analysis of Surface Waves) experiment layer.
@@ -10,7 +11,7 @@ use std::collections::BTreeSet;
 /// * `vs` - The shear wave velocity of the layer in meters per second.
 /// * `vp` - The compressional wave velocity of the layer in meters per second.
 /// * `depth` - The depth of the layer in meters.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaswLayer {
     pub thickness: f64,
     pub vs: f64,
@@ -35,7 +36,7 @@ impl MaswLayer {
 /// * `exps` - A vector of `MaswExp` instances representing the individual layers of the experiment.
 /// * `depths` - A vector of the depths of the layers in the experiment.
 /// * `vs` - A vector of the shear wave velocities of the layers in the experiment.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaswExp {
     pub layers: Vec<MaswLayer>,
     pub name: String,
@@ -98,7 +99,7 @@ impl MaswExp {
 ///
 /// # Fields
 /// * `exps` - A vector of `MaswExp` instances representing the individual experiments in the model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Masw {
     pub exps: Vec<MaswExp>,
 }

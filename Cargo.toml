@@ -1,6 +1,6 @@
 [package]
 name = "soilrust"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 authors = ["Numan Burak Fidan"]
 license = "MIT OR Apache-2.0"
@@ -14,6 +14,7 @@ categories = ["science", "mathematics"]
 # Numerical computation crates
 ndarray = "0.16.1"
 ordered-float = "5"
+serde = "1.0.219"
 
 [dev-dependencies]
 criterion = "0.5.1"  # For benchmarking

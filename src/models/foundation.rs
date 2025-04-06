@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 /// Represents a foundation with geometry and load effects.
 ///
 /// # Fields
@@ -10,7 +12,7 @@
 /// * `effective_width` - Effective width of the foundation after load effects (m).
 /// * `base_tilt_angle` - Foundation inclination angle (degrees).
 /// * `slope_angle` - Slope angle of the ground (degrees).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Foundation {
     /// Depth of the foundation (m).
     pub foundation_depth: f64,

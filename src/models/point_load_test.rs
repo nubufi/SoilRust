@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use ordered_float::OrderedFloat;
@@ -15,7 +16,7 @@ use crate::enums::SelectionMethod;
 /// * `is50` - Corrected point load strength index to 50 mm diameter in MegaPascals (MPa).
 /// * `l` - Optional distance between load application points in millimeters (mm).
 /// * `d` - Equivalent core diameter in millimeters (mm).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PointLoadSample {
     pub depth: f64,
     pub sample_no: Option<u32>,
@@ -47,7 +48,7 @@ impl PointLoadSample {
 /// # Fields
 /// * `borehole_id` - Identifier for the borehole.
 /// * `samples` - Collection of Point Load Test samples taken from the borehole.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PointLoadExp {
     pub borehole_id: String,
     pub samples: Vec<PointLoadSample>,
@@ -89,7 +90,7 @@ impl PointLoadExp {
 ///
 /// # Fields
 /// * `exps` - Collection of borehole tests included in the overall test campaign.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PointLoadTest {
     pub exps: Vec<PointLoadExp>,
 }

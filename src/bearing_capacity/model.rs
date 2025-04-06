@@ -1,5 +1,6 @@
+use serde::Serialize;
 /// Bearing capacity factors according to Terzaghi, Meyerhof, Hansen, etc.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct BearingCapacityFactors {
     pub nc: f64,
     pub nq: f64,
@@ -7,7 +8,7 @@ pub struct BearingCapacityFactors {
 }
 
 /// Shape modification factors used in bearing capacity equations.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct ShapeFactors {
     pub sc: f64,
     pub sq: f64,
@@ -15,7 +16,7 @@ pub struct ShapeFactors {
 }
 
 /// Inclination modification factors for inclined load conditions.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct InclinationFactors {
     pub ic: f64,
     pub iq: f64,
@@ -23,7 +24,7 @@ pub struct InclinationFactors {
 }
 
 /// Base inclination factors depending on foundation base angle.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct BaseFactors {
     pub bc: f64,
     pub bq: f64,
@@ -31,7 +32,7 @@ pub struct BaseFactors {
 }
 
 /// Ground slope modification factors affecting bearing capacity.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct GroundFactors {
     pub gc: f64,
     pub gq: f64,
@@ -39,7 +40,7 @@ pub struct GroundFactors {
 }
 
 /// Depth modification factors for accounting foundation embedment.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct DepthFactors {
     pub dc: f64,
     pub dq: f64,
@@ -47,14 +48,14 @@ pub struct DepthFactors {
 }
 
 /// Soil parameters used in bearing capacity calculations.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct SoilParams {
     pub friction_angle: f64,
     pub cohesion: f64,
     pub unit_weight: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct BearingCapacityResult {
     pub bearing_capacity_factors: BearingCapacityFactors,
     pub shape_factors: ShapeFactors,

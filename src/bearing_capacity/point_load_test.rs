@@ -1,7 +1,9 @@
+use serde::Serialize;
+
 use crate::models::point_load_test::PointLoadExp;
 
 /// Represents the bearing capacity result for a given soil and foundation setup.
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Output {
     /// Is50 value in MPa.
     pub is50: f64,

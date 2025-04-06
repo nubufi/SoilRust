@@ -1,11 +1,12 @@
 use crate::enums::SelectionMethod;
 use ordered_float::OrderedFloat;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 /// Represents a single CPT (Cone Penetration Test) data point.
 ///
 /// Each `CPTLayer` instance holds a `depth` value (in meters) and a `cone_resistance` value (in MPa).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CPTLayer {
     pub depth: f64,                  // Depth in meters
     pub cone_resistance: f64,        // Cone resistance (qc) in MPa
@@ -66,7 +67,7 @@ impl CPTLayer {
 /// Represents a collection of CPT data points.
 ///
 /// A `CPTExp` struct contains multiple `CPTLayer` instances, forming a complete CPT profile.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CPTExp {
     pub layers: Vec<CPTLayer>,
     pub name: String,
@@ -112,7 +113,7 @@ impl CPTExp {
 /// Represents a collection of CPT tests.
 ///
 /// A `CPT` struct contains multiple `CPTExp` instances, each representing a single CPT profile.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CPT {
     pub exps: Vec<CPTExp>,
 }

@@ -1,10 +1,11 @@
+use serde::{Deserialize, Serialize};
 /// Represents a single soil layer in a geotechnical engineering model.
 ///
 /// This struct contains essential soil properties used for analysis, such as
 /// shear strength, stiffness, and classification parameters. The parameters are
 /// divided into **total stress** (undrained) and **effective stress** (drained)
 /// conditions for comprehensive modeling.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SoilLayer {
     pub thickness: f64,                         // meter
     pub natural_unit_weight: Option<f64>,       // t/m³
@@ -80,7 +81,7 @@ impl SoilLayer {
 
 /// Represents a soil profile consisting of multiple soil layers.
 /// This structure stores soil layers and calculates normal and effective stresses.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SoilProfile {
     /// A list of soil layers in the profile.
     pub layers: Vec<SoilLayer>,

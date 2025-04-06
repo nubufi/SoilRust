@@ -1,7 +1,8 @@
 use crate::models::{foundation::Foundation, masw::MaswExp, soil_profile::SoilProfile};
+use serde::Serialize;
 
 /// Represents the bearing capacity result for a given soil and foundation setup.
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Output {
     /// Shear wave velocity (Vs) in m/s.
     pub vs: f64,

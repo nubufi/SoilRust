@@ -495,12 +495,13 @@ dependencies = [
 
 [[package]]
 name = "soilrust"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "approx",
  "criterion",
  "ndarray",
  "ordered-float",
+ "serde",
 ]
 
 [[package]]
