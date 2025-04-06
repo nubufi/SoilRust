@@ -1,4 +1,4 @@
-use crate::models::{foundation::Foundation, soil_profile::SoilProfile};
+use crate::models::{foundation::Foundation, masw::MaswExp, soil_profile::SoilProfile};
 
 /// Represents the bearing capacity result for a given soil and foundation setup.
 #[derive(Debug)]
@@ -19,7 +19,15 @@ pub struct Output {
     pub safety_factor: f64,
 }
 
-fn validate_input(soil_profile: &SoilProfile, foundation: &Foundation) -> Result<(), &'static str> {
+fn validate_input(
+    masw_exp: &MaswExp,
+    soil_profile: &SoilProfile,
+    foundation: &Foundation,
+) -> Result<(), &'static str> {
+    if masw_exp.layers.is_empty() {
+        return Err("MASW experiment layers are empty.");
+    }
+
     if soil_profile.layers.is_empty() {
         return Err("Soil profile is empty.");
     }
@@ -46,12 +54,11 @@ fn validate_input(soil_profile: &SoilProfile, foundation: &Foundation) -> Result
 /// - `soil_profile`: The soil profile containing the layers and their properties.
 ///
 /// # Returns
-/// - A tuple containing the unit weight and shear wave velocity at the specified depth.
-fn get_soil_parameters(df: f64, soil_profile: SoilProfile) -> (f64, f64) {
+/// - The unit weight of the soil at the given depth.
+fn get_unit_weight(df: f64, soil_profile: SoilProfile) -> f64 {
     let layer = soil_profile.get_layer_at_depth(df);
 
     let gwt = soil_profile.ground_water_level;
-    let vs = layer.shear_wave_velocity.unwrap();
 
     let mut unit_weight = layer.dry_unit_weight.unwrap();
 
@@ -59,7 +66,7 @@ fn get_soil_parameters(df: f64, soil_profile: SoilProfile) -> (f64, f64) {
         unit_weight = layer.saturated_unit_weight.unwrap();
     }
 
-    (unit_weight, vs)
+    unit_weight
 }
 
 /// Calculates the ultimate bearing capacity of a foundation based on
@@ -68,6 +75,7 @@ fn get_soil_parameters(df: f64, soil_profile: SoilProfile) -> (f64, f64) {
 ///
 /// # Arguments
 /// - `soil_profile`: A struct containing the soil layers and properties.
+/// - `masw_exp`: A struct representing the MASW experiment data.
 /// - `foundation`: A struct representing the foundation geometry (e.g., depth).
 /// - `foundation_pressure`: The pressure applied by the foundation in t/m2.
 ///
@@ -75,14 +83,17 @@ fn get_soil_parameters(df: f64, soil_profile: SoilProfile) -> (f64, f64) {
 /// - `f64`: The calculated bearing capacity in kPa.
 pub fn calc_bearing_capacity(
     soil_profile: SoilProfile,
+    masw_exp: MaswExp,
     foundation: Foundation,
     foundation_pressure: f64,
 ) -> Output {
     // Validate the input parameters
-    validate_input(&soil_profile, &foundation).unwrap();
+    validate_input(&masw_exp, &soil_profile, &foundation).unwrap();
 
+    let masw_layer = masw_exp.get_layer_at_depth(foundation.foundation_depth);
+    let vs = masw_layer.vs;
     let df = foundation.foundation_depth;
-    let (unit_weight, vs) = get_soil_parameters(df, soil_profile);
+    let unit_weight = get_unit_weight(df, soil_profile);
 
     let (safety_factor, bearing_capacity): (f64, f64) = match vs {
         vs if vs < 750.0 => {
