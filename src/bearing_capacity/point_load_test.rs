@@ -33,6 +33,26 @@ pub struct Output {
     pub safety_factor: f64,
 }
 
+fn validate(
+    point_load_test_exp: PointLoadExp,
+    df: f64,
+    foundation_pressure: f64,
+    safety_factor: f64,
+) -> Result<(), String> {
+    if df < 0.0 {
+        return Err("Depth (df) must be non-negative.".to_string());
+    }
+    if foundation_pressure <= 0.0 {
+        return Err("Foundation pressure must be positive.".to_string());
+    }
+    if safety_factor <= 0.0 {
+        return Err("Safety factor must be positive.".to_string());
+    }
+    if point_load_test_exp.samples.is_empty() {
+        return Err("Point load test experiment data is empty.".to_string());
+    }
+    Ok(())
+}
 /// Calculates the generalized size correction factor `C` based on the given equivalent core diameter `D`.
 ///
 /// This follows the standard chart provided by ASTM and ISRM guidelines for point load tests, interpolating intermediate values.
@@ -90,6 +110,16 @@ pub fn calc_bearing_capacity(
     foundation_pressure: f64,
     safety_factor: f64,
 ) -> Output {
+    // Validate inputs
+    if let Err(e) = validate(
+        point_load_test_exp.clone(),
+        df,
+        foundation_pressure,
+        safety_factor,
+    ) {
+        panic!("Validation error: {}", e);
+    }
+    const MPA_TO_TON: f64 = 101.97162; // Conversion factor from MPa to ton/m2
     let sample = point_load_test_exp.get_sample_at_depth(df);
 
     let is50 = sample.is50;
@@ -98,7 +128,7 @@ pub fn calc_bearing_capacity(
 
     let ucs = is50 * c;
 
-    let allowable_bearing_capacity = ucs / safety_factor;
+    let allowable_bearing_capacity = MPA_TO_TON * ucs / safety_factor;
     let is_safe = allowable_bearing_capacity >= foundation_pressure;
 
     Output {
