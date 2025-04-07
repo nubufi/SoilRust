@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, Copy)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum SelectionMethod {
     Min,
     Avg,
@@ -16,7 +18,7 @@ pub enum SelectionMethod {
 /// * `G` - Dead load
 /// * `Q` - Live load
 /// * `E` - Earthquake load
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum LoadCase {
     ServiceLoad,
     UltimateLoad,
@@ -28,7 +30,7 @@ pub enum LoadCase {
 /// # Variants
 /// * `Short` - Short term analysis
 /// * `Long` - Long term analysis
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum AnalysisTerm {
     Short,
     Long,
