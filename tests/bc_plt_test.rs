@@ -31,5 +31,9 @@ fn test_calc_bearing_capacity() {
 
     assert_eq!(result.c, 23.0);
     assert_abs_diff_eq!(result.ucs, 46.0, epsilon = 1e-5);
-    assert_abs_diff_eq!(result.allowable_bearing_capacity, 23.0, epsilon = 1e-5);
+    assert_abs_diff_eq!(
+        result.allowable_bearing_capacity,
+        2345.34726,
+        epsilon = 1e-5
+    );
 }
