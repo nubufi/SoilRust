@@ -309,6 +309,7 @@ pub fn calc_ground_factors(iq: f64, slope_angle: f64, phi: f64) -> GroundFactors
 /// * `soil_profile` - The soil profile data.
 /// * `foundation` - The foundation data.
 /// * `loading` - The applied loads.
+/// * `foundation_pressure` - The pressure on the foundation.
 /// * `factor_of_safety` - The safety factor to apply.
 /// * `term` - Short or long-term condition.
 ///
@@ -318,6 +319,7 @@ pub fn calc_bearing_capacity(
     soil_profile: &SoilProfile,
     foundation: &mut Foundation,
     loading: &Loads,
+    foundation_pressure: f64,
     factor_of_safety: f64,
     term: AnalysisTerm,
 ) -> BearingCapacityResult {
@@ -388,7 +390,7 @@ pub fn calc_bearing_capacity(
 
     let q_allow = q_ult / factor_of_safety;
 
-    let is_safe = loading.vertical_load.unwrap_or(0.0) <= q_allow;
+    let is_safe = foundation_pressure <= q_allow;
 
     BearingCapacityResult {
         bearing_capacity_factors,
