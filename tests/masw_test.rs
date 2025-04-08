@@ -80,7 +80,7 @@ fn create_test_maws() -> Masw {
 
 #[test]
 fn test_get_idealized_exp_min_mode() {
-    let masw = create_test_maws();
+    let mut masw = create_test_maws();
 
     let ideal = masw.get_idealized_exp(SelectionMethod::Min, "Ideal_Min".into());
 
@@ -104,7 +104,7 @@ fn test_get_idealized_exp_min_mode() {
 
 #[test]
 fn test_get_idealized_exp_avg_mode() {
-    let masw = create_test_maws();
+    let mut masw = create_test_maws();
 
     let ideal = masw.get_idealized_exp(SelectionMethod::Avg, "Ideal_Avg".into());
 
@@ -128,7 +128,7 @@ fn test_get_idealized_exp_avg_mode() {
 
 #[test]
 fn test_get_idealized_exp_max_mode() {
-    let masw = create_test_maws();
+    let mut masw = create_test_maws();
 
     let ideal = masw.get_idealized_exp(SelectionMethod::Max, "Ideal_Max".into());
 

@@ -116,6 +116,12 @@ impl Masw {
         self.exps.push(exp);
     }
 
+    pub fn calc_depths(&mut self) {
+        for exp in &mut self.exps {
+            exp.calc_depths();
+        }
+    }
+
     /// Creates an idealized MASW experiment based on the given mode.
     /// The idealized experiment is created by combining the corresponding layers from each individual experiment in the model.
     ///
@@ -125,10 +131,12 @@ impl Masw {
     ///
     /// # Returns
     /// A new `MaswExp` instance representing the idealized experiment.
-    pub fn get_idealized_exp(&self, mode: SelectionMethod, name: String) -> MaswExp {
+    pub fn get_idealized_exp(&mut self, mode: SelectionMethod, name: String) -> MaswExp {
         if self.exps.is_empty() {
             return MaswExp::new(vec![], name);
         }
+
+        self.calc_depths();
 
         // 1. Collect unique depths across all experiments
         let mut unique_depths = BTreeSet::new();
