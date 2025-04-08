@@ -112,7 +112,7 @@ impl SoilProfile {
     }
 
     /// Calculates center and bottom depth for each soil layer.
-    fn calc_layer_depths(&mut self) {
+    pub fn calc_layer_depths(&mut self) {
         if self.layers.is_empty() {
             return;
         }
