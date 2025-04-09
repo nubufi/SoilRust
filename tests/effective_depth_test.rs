@@ -43,6 +43,7 @@ fn create_foundation_data() -> Foundation {
         ..Default::default()
     }
 }
+
 #[test]
 fn test_effective_depth() {
     let soil_profile = create_soil_profile();

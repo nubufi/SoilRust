@@ -30,6 +30,8 @@ pub struct Foundation {
     pub effective_length: Option<f64>,
     /// Effective width of the foundation after load effects (m).
     pub effective_width: Option<f64>,
+    /// Friction coefficient for horizontal sliding (unitless).
+    pub surface_friction_coefficient: Option<f64>,
 }
 
 impl Default for Foundation {
@@ -43,6 +45,7 @@ impl Default for Foundation {
             effective_width: None,
             base_tilt_angle: None,
             slope_angle: None,
+            surface_friction_coefficient: None,
         }
     }
 }
@@ -67,6 +70,7 @@ impl Foundation {
         angle: Option<f64>,
         slope: Option<f64>,
         area: Option<f64>,
+        surface_friction_coefficient: Option<f64>,
     ) -> Self {
         Self {
             foundation_depth: depth,
@@ -77,6 +81,7 @@ impl Foundation {
             slope_angle: slope,
             effective_length: None,
             effective_width: None,
+            surface_friction_coefficient,
         }
     }
     /// Calculates effective lengths based on applied loads.
