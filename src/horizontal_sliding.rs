@@ -1,7 +1,8 @@
+use crate::models::{foundation::Foundation, loads::Loads, soil_profile::SoilProfile};
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 
-use crate::models::{foundation::Foundation, loads::Loads, soil_profile::SoilProfile};
-
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HorizontalSlidingResult {
     pub rth: f64,
     pub ptv: f64,
