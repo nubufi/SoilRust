@@ -94,10 +94,10 @@ impl Ord for NValue {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SPTBlow {
     pub depth: f64,
-    pub n1: NValue,
-    pub n2: NValue,
-    pub n3: NValue,
-    pub n: NValue,
+    pub n1: Option<NValue>,
+    pub n2: Option<NValue>,
+    pub n3: Option<NValue>,
+    pub n: Option<NValue>,
     pub n60: Option<NValue>,
     pub n90: Option<NValue>,
     pub n1_60: Option<NValue>,
@@ -118,10 +118,10 @@ impl SPTBlow {
     pub fn new(depth: f64, n1: NValue, n2: NValue, n3: NValue) -> Self {
         Self {
             depth,
-            n1,
-            n2,
-            n3,
-            n: n2.sum_with(n3),
+            n1: Some(n1),
+            n2: Some(n2),
+            n3: Some(n3),
+            n: Some(n2.sum_with(n3)),
             ..Default::default()
         }
     }
@@ -131,7 +131,7 @@ impl SPTBlow {
     /// # Arguments
     /// * `energy_correction_factor` - Energy correction factor to convert N value to N60
     pub fn apply_energy_correction(&mut self, energy_correction_factor: f64) {
-        let n60 = self.n.mul_by_f64(energy_correction_factor);
+        let n60 = self.n.unwrap().mul_by_f64(energy_correction_factor);
         self.n60 = Some(n60);
         self.n90 = Some(n60.mul_by_f64(1.5));
     }
@@ -301,7 +301,7 @@ impl SPT {
                 depth_map
                     .entry(OrderedFloat(blow.depth))
                     .or_default()
-                    .push(blow.n);
+                    .push(blow.n.unwrap());
             }
         }
 
@@ -326,10 +326,10 @@ impl SPT {
             // Add to new SPTExp
             idealized_blows.push(SPTBlow {
                 depth: depth.into_inner(),
-                n1: NValue::Value(0), // Placeholder (could be refined if needed)
-                n2: NValue::Value(0),
-                n3: NValue::Value(0),
-                n: selected_n,
+                n1: Some(NValue::Value(0)), // Placeholder (could be refined if needed)
+                n2: Some(NValue::Value(0)),
+                n3: Some(NValue::Value(0)),
+                n: Some(selected_n),
                 ..Default::default()
             });
         }

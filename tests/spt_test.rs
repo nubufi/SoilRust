@@ -77,10 +77,10 @@ fn test_sptblow_new() {
     );
 
     assert_eq!(spt.depth, 10.0);
-    assert_eq!(spt.n1, NValue::from_i32(5));
-    assert_eq!(spt.n2, NValue::from_i32(10));
-    assert_eq!(spt.n3, NValue::from_i32(15));
-    assert_eq!(spt.n, NValue::from_i32(25)); // n2 + n3
+    assert_eq!(spt.n1, Some(NValue::from_i32(5)));
+    assert_eq!(spt.n2, Some(NValue::from_i32(10)));
+    assert_eq!(spt.n3, Some(NValue::from_i32(15)));
+    assert_eq!(spt.n, Some(NValue::from_i32(25))); // n2 + n3
     assert_eq!(spt.n60, None);
     assert_eq!(spt.n90, None);
     assert_eq!(spt.n1_60, None);
@@ -214,15 +214,15 @@ fn test_get_idealized_exp() {
     assert_eq!(idealized_exp_max.blows[1].depth, 2.0);
     assert_eq!(idealized_exp_max.blows[2].depth, 3.0);
 
-    assert_eq!(idealized_exp_min.blows[0].n, NValue::Value(10));
-    assert_eq!(idealized_exp_min.blows[1].n, NValue::Value(20));
-    assert_eq!(idealized_exp_min.blows[2].n, NValue::Value(14));
+    assert_eq!(idealized_exp_min.blows[0].n, Some(NValue::Value(10)));
+    assert_eq!(idealized_exp_min.blows[1].n, Some(NValue::Value(20)));
+    assert_eq!(idealized_exp_min.blows[2].n, Some(NValue::Value(14)));
 
-    assert_eq!(idealized_exp_avg.blows[0].n, NValue::Value(13));
-    assert_eq!(idealized_exp_avg.blows[1].n, NValue::Value(20));
-    assert_eq!(idealized_exp_avg.blows[2].n, NValue::Value(32));
+    assert_eq!(idealized_exp_avg.blows[0].n, Some(NValue::Value(13)));
+    assert_eq!(idealized_exp_avg.blows[1].n, Some(NValue::Value(20)));
+    assert_eq!(idealized_exp_avg.blows[2].n, Some(NValue::Value(32)));
 
-    assert_eq!(idealized_exp_max.blows[0].n, NValue::Value(15));
-    assert_eq!(idealized_exp_max.blows[1].n, NValue::Value(20));
-    assert_eq!(idealized_exp_max.blows[2].n, NValue::Refusal);
+    assert_eq!(idealized_exp_max.blows[0].n, Some(NValue::Value(15)));
+    assert_eq!(idealized_exp_max.blows[1].n, Some(NValue::Value(20)));
+    assert_eq!(idealized_exp_max.blows[2].n, Some(NValue::Refusal));
 }
