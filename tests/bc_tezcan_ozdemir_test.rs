@@ -34,7 +34,8 @@ fn create_masw_exp(vs: f64) -> MaswExp {
 fn test_bc_tezcan_ozdemir_1() {
     let soil_profile: SoilProfile = create_soil_profile();
     let masw_exp = create_masw_exp(4001.0);
-    let foundation = soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None);
+    let foundation =
+        soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None, None);
 
     let foundation_pressure = 100.0;
 
@@ -55,7 +56,8 @@ fn test_bc_tezcan_ozdemir_1() {
 fn test_bc_tezcan_ozdemir_2() {
     let soil_profile: SoilProfile = create_soil_profile();
     let masw_exp = create_masw_exp(3000.0);
-    let foundation = soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None);
+    let foundation =
+        soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None, None);
 
     let foundation_pressure = 100.0;
 
@@ -76,7 +78,8 @@ fn test_bc_tezcan_ozdemir_2() {
 fn test_bc_tezcan_ozdemir_3() {
     let soil_profile: SoilProfile = create_soil_profile();
     let masw_exp = create_masw_exp(400.0);
-    let foundation = soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None);
+    let foundation =
+        soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None, None);
 
     let foundation_pressure = 100.0;
 
