@@ -32,9 +32,6 @@ pub struct SoilLayer {
     pub preconsolidation_pressure: Option<f64>, // t/m²
     pub mv: Option<f64>,                        // volume compressibility coefficient in m²/t
     pub shear_wave_velocity: Option<f64>,       // m/s
-    pub rqd: Option<f64>,                       // Rock Quality Designation (RQD)
-    pub is50: Option<f64>,                      // Uniaxial Compressive Strength (MPa)
-    pub kp: Option<f64>,                        // Coefficient of passive earth pressure
 }
 impl Default for SoilLayer {
     fn default() -> Self {
@@ -64,9 +61,6 @@ impl Default for SoilLayer {
             preconsolidation_pressure: None,
             mv: None,
             shear_wave_velocity: None,
-            rqd: None,
-            is50: None,
-            kp: None,
         }
     }
 }
