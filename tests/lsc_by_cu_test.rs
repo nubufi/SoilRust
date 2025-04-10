@@ -45,6 +45,7 @@ fn test_case_2() {
     assert_eq!(result.soil_class, "ZC"); // low cu_30 leads to ZE
 }
 
+/// Case 3: All cu > 0 & depth > 30
 #[test]
 fn test_case_3() {
     let profile = SoilProfile {
