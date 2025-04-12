@@ -1,5 +1,7 @@
 use crate::models::{foundation::Foundation, soil_profile::SoilProfile};
 
+use super::helper_functions::{calc_delta_stress, get_center_and_thickness};
+
 fn validate(
     soil_profile: &SoilProfile,
     foundation: &Foundation,
@@ -32,45 +34,6 @@ fn validate(
         }
     }
     Ok(())
-}
-
-/// Calculates the center and thickness of a soil layer based on the ground water table (GWT) and the depth of the foundation (df).
-///
-/// # Arguments
-/// * `soil_profile` - The soil profile containing the layers.
-/// * `df` - The depth of the foundation.
-/// * `layer_index` - The index of the layer.
-///
-/// # Returns
-/// * A tuple containing the center and thickness of the layer.
-pub fn get_center_and_thickness(
-    soil_profile: &SoilProfile,
-    df: f64,
-    layer_index: usize,
-) -> (f64, f64) {
-    let gwt = soil_profile.ground_water_level;
-    let gwt_layer_index = soil_profile.get_layer_index(gwt);
-    let df_layer_index = soil_profile.get_layer_index(df);
-    let layer = &soil_profile.layers[layer_index];
-
-    let (center, thickness) = if gwt_layer_index < layer_index {
-        if layer_index == df_layer_index {
-            let thickness = layer.thickness - df;
-            let center = df + thickness / 2.0;
-            (center, thickness)
-        } else {
-            let thickness = layer.thickness;
-            let center = layer.center.expect("Layer center must be Some");
-            (center, thickness)
-        }
-    } else {
-        let max_depth = df.max(gwt);
-        let thickness = layer.thickness - max_depth;
-        let center = max_depth + thickness / 2.0;
-        (center, thickness)
-    };
-
-    (center, thickness)
 }
 
 /// This module provides functions to calculate consolidation settlement using the coefficient of volume compressibility (mv).
@@ -117,7 +80,7 @@ pub fn calc_settlement(
         let layer = &soil_profile.layers[i];
         let (center, thickness) = get_center_and_thickness(soil_profile, df, i);
         let mv = layer.mv.unwrap();
-        let delta_stress = q_net * width * length / (width + center) * (length + center);
+        let delta_stress = calc_delta_stress(q_net, width, length, center);
         let settlement = calc_single_layer_settlement(mv, thickness, delta_stress);
         settlements.push(settlement);
     }
