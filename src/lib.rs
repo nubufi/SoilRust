@@ -1,5 +1,6 @@
 pub mod bearing_capacity;
 pub mod effective_depth;
+pub mod elastic_settlement;
 pub mod enums;
 pub mod horizontal_sliding;
 pub mod local_soil_class;

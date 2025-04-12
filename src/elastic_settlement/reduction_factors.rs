@@ -4,7 +4,7 @@
 // 2nd dimension: df/B [0.05,0.1,0.2,0.4,0.6,0.8,1,2]
 // 3rd dimension: L/B [1,1.2,1.4,1.6,1.8,2,5]
 pub struct IfTable {
-    pub values: &'static [&'static [&'static [f32]]],
+    pub values: &'static [&'static [&'static [f64]]],
 }
 
 const IF_TABLE: IfTable = IfTable {
@@ -62,11 +62,11 @@ const IF_TABLE: IfTable = IfTable {
     ],
 };
 
-const NU_VALUES: [f32; 5] = [0.0, 0.1, 0.3, 0.4, 0.5];
-const D_B_VALUES: [f32; 8] = [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0];
-const L_B_VALUES: [f32; 7] = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 5.0];
+const NU_VALUES: [f64; 5] = [0.0, 0.1, 0.3, 0.4, 0.5];
+const D_B_VALUES: [f64; 8] = [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0, 2.0];
+const L_B_VALUES: [f64; 7] = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 5.0];
 
-fn find_bounds(values: &[f32], target: f32) -> (usize, usize) {
+fn find_bounds(values: &[f64], target: f64) -> (usize, usize) {
     for i in 0..values.len() - 1 {
         if target >= values[i] && target <= values[i + 1] {
             return (i, i + 1);
@@ -86,7 +86,7 @@ fn find_bounds(values: &[f32], target: f32) -> (usize, usize) {
 /// # Returns
 ///
 /// The interpolated IF value
-pub fn interpolate_if(nu: f32, d_b: f32, l_b: f32) -> f32 {
+pub fn interpolate_if(nu: f64, d_b: f64, l_b: f64) -> f64 {
     let nu = nu.clamp(0., 0.5);
     let d_b = d_b.clamp(0.05, 2.0);
     let l_b = l_b.clamp(1.0, 5.0);
@@ -113,7 +113,7 @@ pub fn interpolate_if(nu: f32, d_b: f32, l_b: f32) -> f32 {
     let if111 = IF_TABLE.values[nu_i1][d_b_i1][l_b_i1];
 
     // Linear interp function
-    let lerp = |x0: f32, x1: f32, t: f32| x0 * (1.0 - t) + x1 * t;
+    let lerp = |x0: f64, x1: f64, t: f64| x0 * (1.0 - t) + x1 * t;
 
     let tx = (nu - nu0) / (nu1 - nu0);
     let ty = (d_b - d_b0) / (d_b1 - d_b0);
