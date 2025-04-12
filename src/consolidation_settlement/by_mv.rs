@@ -107,8 +107,13 @@ pub fn calc_settlement(
     let width = foundation.foundation_width;
     let length = foundation.foundation_length;
     let q_net = foundation_pressure - soil_profile.calc_normal_stress(df);
+    let gwt = soil_profile.ground_water_level;
 
     for i in 0..soil_profile.layers.len() {
+        if soil_profile.get_layer_index(gwt) > i || soil_profile.get_layer_index(df) > i {
+            settlements.push(0.0);
+            continue;
+        }
         let layer = &soil_profile.layers[i];
         let (center, thickness) = get_center_and_thickness(soil_profile, df, i);
         let mv = layer.mv.unwrap();
