@@ -1,4 +1,5 @@
 pub mod bearing_capacity;
+pub mod consolidation_settlement;
 pub mod effective_depth;
 pub mod elastic_settlement;
 pub mod enums;
