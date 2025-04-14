@@ -93,6 +93,7 @@ impl Ord for NValue {
 // -------------------------------------------------------------------------------------------
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SPTBlow {
+    pub thickness: Option<f64>,
     pub depth: f64,
     pub n1: Option<NValue>,
     pub n2: Option<NValue>,
@@ -217,6 +218,15 @@ impl SPTExp {
     /// * `n3` - N-value of the third blow
     pub fn add_blow(&mut self, depth: f64, n1: NValue, n2: NValue, n3: NValue) {
         self.blows.push(SPTBlow::new(depth, n1, n2, n3));
+    }
+
+    /// Calculate the thickness of each blow
+    pub fn calc_thicknesses(&mut self) {
+        let mut prev_depth = 0.0;
+        for blow in &mut self.blows {
+            blow.thickness = Some(blow.depth - prev_depth);
+            prev_depth = blow.depth;
+        }
     }
 
     /// Apply corrections
