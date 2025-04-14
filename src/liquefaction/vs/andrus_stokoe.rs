@@ -1,21 +1,13 @@
 use crate::{
     helper::interp1d,
     liquefaction::models::{LiquefactionLayerResult, LiquefactionResult},
-    models::{soil_profile::SoilProfile, spt::SPTExp},
+    models::{masw::MaswExp, soil_profile::SoilProfile},
 };
 
-/// Validates the soil profile and SPT data
-fn validate(soil_profile: &SoilProfile, spt: &SPTExp) -> Result<(), String> {
-    if spt.blows.is_empty() {
+/// Validates the soil profile and MASW data
+fn validate(soil_profile: &SoilProfile, masw: &MaswExp) -> Result<(), String> {
+    if masw.layers.is_empty() {
         return Err("No SPT data provided.".to_string());
-    }
-    for blow in &spt.blows {
-        if blow.n1_60.is_none() || blow.n1_60f.is_none() {
-            return Err("N1_60 and N1_60f values are required.".to_string());
-        }
-        if blow.thickness.is_none() {
-            return Err("Layer thickness is required.".to_string());
-        }
     }
     if soil_profile.layers.is_empty() {
         return Err("No soil profile data provided.".to_string());
@@ -34,7 +26,6 @@ fn validate(soil_profile: &SoilProfile, spt: &SPTExp) -> Result<(), String> {
 
     Ok(())
 }
-
 /// Calculates stress reduction factor (rd) based on depth
 ///
 /// # Arguments
@@ -51,19 +42,25 @@ pub fn calc_rd(depth: f64) -> f64 {
     }
 }
 
+pub fn calc_vs1c(fine_content: f64) -> f64 {
+    match fine_content {
+        fc if fc <= 5.0 => 215.0,
+        fc if fc > 5.0 && fc <= 35.0 => 215. - 0.5 * (fc - 5.0),
+        _ => 200.,
+    }
+}
+
 /// Calculates cyclic resistance ratio (CRR) based on N1_60 and effective stress
 ///
 /// # Arguments
-/// * `n1_60` - N1_60 value
+/// * `vs1` - Vs1 value
+/// * `vs1c` - Vs1c value
 /// * `effective_stress` - Effective stress in ton/m²
 ///
 /// # Returns
 /// * `crr` - Cyclic resistance ratio
-pub fn calc_crr75(n1_60_f: i32, effective_stress: f64) -> f64 {
-    let n1_60_f = n1_60_f as f64;
-    ((1.0 / (34.0 - n1_60_f)) + (n1_60_f / 135.0) + (50.0 / ((10.0 * n1_60_f + 45.0).powi(2)))
-        - 1.0 / 200.0)
-        * effective_stress
+pub fn calc_crr75(vs1: f64, vs1c: f64, effective_stress: f64) -> f64 {
+    ((0.03 * (vs1 / 100.).powf(2.)) + 0.09 / (vs1c - vs1) - 0.09 / vs1c) * effective_stress
 }
 
 /// Calculates cyclic stress ratio (CSR) based on PGA, normal stress, and rd
@@ -86,18 +83,29 @@ pub fn calc_msf(mw: f64) -> f64 {
     10.0_f64.powf(2.24) / mw.powf(2.56)
 }
 
+/// Calculates Cn correction factor based on effective stress
+///
+/// # Arguments
+/// * `effective_stress` - Effective stress in ton/m²
+///
+/// # Returns
+/// * `cn` - Cn correction factor
+pub fn calc_cn(effective_stress: f64) -> f64 {
+    let cn = 1.16 * (1. / effective_stress).powf(0.5);
+    cn.min(1.7)
+}
+
 /// Calculates settlement due to liquefaction for a single layer
 ///
 /// # Arguments
 /// * `fs` - Factor of Safety
 /// * `layer_thickness` - Thickness of the layer (m)
-/// * `n60` - Corrected N60 value
+/// * `vs1` - Vs1c value
 ///
 /// # Returns
 /// * Settlement in cm
-pub fn calc_settlement(fs: f64, layer_thickness: f64, n60: i32) -> f64 {
-    let mut n90 = (n60 as f64) * 6.0 / 9.0;
-    n90 = n90.clamp(3.0, 30.0);
+pub fn calc_settlement(fs: f64, layer_thickness: f64, vs1: f64) -> f64 {
+    let dr = 17.974 * (vs1 / 100.).powf(1.976);
 
     let a0 = 0.3773;
     let a1 = -0.0337;
@@ -107,10 +115,10 @@ pub fn calc_settlement(fs: f64, layer_thickness: f64, n60: i32) -> f64 {
     let b1 = -9.3372;
     let b2 = 0.7975;
 
-    let n90_list = [3.0, 6.0, 10.0, 14.0, 25.0, 30.0];
-    let q_list = [33.0, 45.0, 60.0, 80.0, 147.0, 200.0];
+    let dr_list = [30.0, 40., 50.0, 60.0, 70.0, 80.0, 90.];
+    let q_list = [33.0, 45.0, 60.0, 80.0, 110., 147.0, 200.0];
 
-    let q = interp1d(&n90_list, &q_list, n90);
+    let q = interp1d(&dr_list, &q_list, dr);
 
     let settlement = match fs {
         f if f > 2.0 => 0.0,
@@ -137,31 +145,32 @@ pub fn calc_settlement(fs: f64, layer_thickness: f64, n60: i32) -> f64 {
 /// * `LiquefactionResult` - Result of liquefaction analysis
 pub fn calc_liquefacion(
     soil_profile: &SoilProfile,
-    spt: &SPTExp,
+    masw: &MaswExp,
     pga: f64,
     mw: f64,
 ) -> LiquefactionResult {
-    validate(soil_profile, spt).unwrap();
+    validate(soil_profile, masw).unwrap();
     let msf = calc_msf(mw);
     let mut layer_results = Vec::new();
 
-    for blow in spt.blows.iter() {
-        let thickness = blow.thickness.unwrap();
-        let depth = blow.depth;
+    for layer in soil_profile.layers.iter() {
+        let thickness = layer.thickness;
+        let depth = layer.depth.unwrap();
         let rd = calc_rd(depth);
-        let n60 = blow.n60.unwrap().to_i32();
-        let n1_60 = blow.n1_60.unwrap().to_i32();
-        let n1_60_f = blow.n1_60f.unwrap().to_i32();
         let effective_stress = soil_profile.calc_effective_stress(depth);
         let normal_stress = soil_profile.calc_normal_stress(depth);
         let soil_layer = soil_profile.get_layer_at_depth(depth);
         let plasticity_index = soil_layer.plasticity_index.unwrap();
+        let masw_layer = masw.get_layer_at_depth(depth);
+        let vs = masw_layer.vs;
+        let cn = calc_cn(effective_stress);
+        let vs1 = vs * cn;
+        let vs1c = calc_vs1c(soil_layer.fine_content.unwrap());
 
         let conditions = [
             soil_profile.ground_water_level >= depth,
             plasticity_index >= 12.,
-            n1_60 >= 30,
-            n1_60_f >= 34,
+            vs1 >= vs1c,
         ];
         if conditions.iter().all(|&x| x) {
             let layer_result = LiquefactionLayerResult {
@@ -174,17 +183,19 @@ pub fn calc_liquefacion(
                 is_safe: true,
                 settlement: 0.0,
                 rd,
-                ..Default::default()
+                vs1: Some(vs1),
+                vs1c: Some(vs1c),
+                cn: Some(cn),
             };
             layer_results.push(layer_result);
             continue;
         }
         let csr = calc_csr(pga, normal_stress, rd);
-        let crr75 = calc_crr75(n1_60_f, effective_stress);
+        let crr75 = calc_crr75(vs1, vs1c, effective_stress);
         let crr = msf * crr75;
         let safety_factor = crr / csr;
 
-        let settlement = calc_settlement(safety_factor, thickness, n60);
+        let settlement = calc_settlement(safety_factor, thickness, vs1);
 
         let layer_result = LiquefactionLayerResult {
             normal_stress,
@@ -196,7 +207,9 @@ pub fn calc_liquefacion(
             is_safe: safety_factor > 1.1,
             settlement,
             rd,
-            ..Default::default()
+            vs1: Some(vs1),
+            vs1c: Some(vs1c),
+            cn: Some(cn),
         };
         layer_results.push(layer_result);
 
