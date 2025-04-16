@@ -30,6 +30,13 @@ fn validate(soil_profile: &SoilProfile, masw: &MaswExp) -> Result<(), String> {
     Ok(())
 }
 
+/// Calculates Vs1c based on fine content
+///
+/// # Arguments
+/// * `fine_content` - Fine content in percentage
+///
+/// # Returns
+/// * `vs1c` - Vs1c value
 pub fn calc_vs1c(fine_content: f64) -> f64 {
     match fine_content {
         fc if fc <= 5.0 => 215.0,
