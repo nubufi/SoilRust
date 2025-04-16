@@ -1,6 +1,9 @@
 use crate::{
     helper::interp1d,
-    liquefaction::models::{LiquefactionLayerResult, LiquefactionResult},
+    liquefaction::{
+        helper_functions::{calc_csr, calc_msf, calc_rd},
+        models::{LiquefactionLayerResult, LiquefactionResult},
+    },
     models::{soil_profile::SoilProfile, spt::SPTExp},
 };
 
@@ -35,22 +38,6 @@ fn validate(soil_profile: &SoilProfile, spt: &SPTExp) -> Result<(), String> {
     Ok(())
 }
 
-/// Calculates stress reduction factor (rd) based on depth
-///
-/// # Arguments
-/// * `depth` - Depth in meters
-///
-/// # Returns
-/// * `rd` - Stress reduction coefficient
-pub fn calc_rd(depth: f64) -> f64 {
-    match depth {
-        z if z <= 9.15 => 1.0 - 0.00765 * z,
-        z if z > 9.15 && z < 23.0 => 1.174 - 0.0267 * z,
-        z if (23.0..30.0).contains(&z) => 0.744 - 0.008 * z,
-        _ => 0.5,
-    }
-}
-
 /// Calculates cyclic resistance ratio (CRR) based on N1_60 and effective stress
 ///
 /// # Arguments
@@ -64,26 +51,6 @@ pub fn calc_crr75(n1_60_f: i32, effective_stress: f64) -> f64 {
     ((1.0 / (34.0 - n1_60_f)) + (n1_60_f / 135.0) + (50.0 / ((10.0 * n1_60_f + 45.0).powi(2)))
         - 1.0 / 200.0)
         * effective_stress
-}
-
-/// Calculates cyclic stress ratio (CSR) based on PGA, normal stress, and rd
-///
-/// # Arguments
-/// * `pga` - Peak Ground Acceleration
-/// * `normal_stress` - Normal stress in ton/m²
-pub fn calc_csr(pga: f64, normal_stress: f64, rd: f64) -> f64 {
-    0.65 * pga * normal_stress * rd
-}
-
-/// Calculates magnitude scaling factor (MSF) based on moment magnitude
-///
-/// # Arguments
-/// * `mw` - Moment magnitude
-///
-/// # Returns
-/// * `msf` - Magnitude scaling factor
-pub fn calc_msf(mw: f64) -> f64 {
-    10.0_f64.powf(2.24) / mw.powf(2.56)
 }
 
 /// Calculates settlement due to liquefaction for a single layer
