@@ -75,14 +75,14 @@ fn create_test_maws() -> Masw {
         "Exp3".into(),
     );
 
-    Masw::new(vec![exp1, exp2, exp3])
+    Masw::new(vec![exp1, exp2, exp3], SelectionMethod::Min)
 }
 
 #[test]
 fn test_get_idealized_exp_min_mode() {
     let mut masw = create_test_maws();
 
-    let ideal = masw.get_idealized_exp(SelectionMethod::Min, "Ideal_Min".into());
+    let ideal = masw.get_idealized_exp("Ideal_Min".into());
 
     println!("{:?}", ideal);
     // Sanity checks
@@ -106,7 +106,8 @@ fn test_get_idealized_exp_min_mode() {
 fn test_get_idealized_exp_avg_mode() {
     let mut masw = create_test_maws();
 
-    let ideal = masw.get_idealized_exp(SelectionMethod::Avg, "Ideal_Avg".into());
+    masw.idealization_method = SelectionMethod::Avg;
+    let ideal = masw.get_idealized_exp("Ideal_Avg".into());
 
     println!("{:?}", ideal);
     // Sanity checks
@@ -130,7 +131,8 @@ fn test_get_idealized_exp_avg_mode() {
 fn test_get_idealized_exp_max_mode() {
     let mut masw = create_test_maws();
 
-    let ideal = masw.get_idealized_exp(SelectionMethod::Max, "Ideal_Max".into());
+    masw.idealization_method = SelectionMethod::Max;
+    let ideal = masw.get_idealized_exp("Ideal_Max".into());
 
     println!("{:?}", ideal);
     // Sanity checks

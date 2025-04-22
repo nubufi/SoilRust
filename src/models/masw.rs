@@ -102,14 +102,18 @@ impl MaswExp {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Masw {
     pub exps: Vec<MaswExp>,
+    pub idealization_method: SelectionMethod,
 }
 
 impl Masw {
-    pub fn new(mut exps: Vec<MaswExp>) -> Self {
+    pub fn new(mut exps: Vec<MaswExp>, idealization_method: SelectionMethod) -> Self {
         for exp in &mut exps {
             exp.calc_depths();
         }
-        Self { exps }
+        Self {
+            exps,
+            idealization_method,
+        }
     }
 
     pub fn add_exp(&mut self, exp: MaswExp) {
@@ -131,10 +135,12 @@ impl Masw {
     ///
     /// # Returns
     /// A new `MaswExp` instance representing the idealized experiment.
-    pub fn get_idealized_exp(&mut self, mode: SelectionMethod, name: String) -> MaswExp {
+    pub fn get_idealized_exp(&mut self, name: String) -> MaswExp {
         if self.exps.is_empty() {
             return MaswExp::new(vec![], name);
         }
+
+        let mode = self.idealization_method;
 
         self.calc_depths();
 
