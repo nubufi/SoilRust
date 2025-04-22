@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fmt;
 
+use super::soil_profile::SoilProfile;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NValue {
     Value(i32),
@@ -171,24 +173,27 @@ impl SPTBlow {
     /// Apply corrections
     ///
     /// # Arguments
-    /// * `sigma_effective` - Effective overburden pressure in ton
-    /// * `fine_content` - Percentage of fine content in soil in percentage
+    /// * `soil_profile` - Soil profile
     /// * `cr` - rod length correction factor
     /// * `cs` - sampler correction factor
     /// * `cb` - borehole diameter correction factor
     /// * `ce` - energy correction factor
     pub fn apply_corrections(
         &mut self,
-        sigma_effective: f64,
-        fine_content: f64,
+        soil_profile: &SoilProfile,
         cr: f64,
         cs: f64,
         cb: f64,
         ce: f64,
     ) {
         self.apply_energy_correction(ce);
-        self.set_cn(sigma_effective);
-        self.set_alpha_beta(fine_content);
+        self.set_cn(soil_profile.calc_effective_stress(self.depth));
+        self.set_alpha_beta(
+            soil_profile
+                .get_layer_at_depth(self.depth)
+                .fine_content
+                .unwrap_or(0.0),
+        );
 
         if let (Some(n60), Some(cn), Some(alpha), Some(beta)) =
             (self.n60, self.cn, self.alpha, self.beta)
@@ -256,16 +261,14 @@ impl SPTExp {
     /// Apply corrections
     ///
     /// # Arguments
-    /// * `sigma_effective` - Effective overburden pressure in ton
-    /// * `fine_content` - Percentage of fine content in soil in percentage
+    /// * `soil_profile` - Soil profile
     /// * `cr` - rod length correction factor
     /// * `cs` - sampler correction factor
     /// * `cb` - borehole diameter correction factor
     /// * `ce` - energy correction factor
     pub fn apply_corrections(
         &mut self,
-        sigma_effective: f64,
-        fine_content: f64,
+        soil_profile: &SoilProfile,
         cr: f64,
         cs: f64,
         cb: f64,
@@ -273,7 +276,7 @@ impl SPTExp {
     ) {
         self.blows
             .iter_mut()
-            .for_each(|blow| blow.apply_corrections(sigma_effective, fine_content, cr, cs, cb, ce));
+            .for_each(|blow| blow.apply_corrections(soil_profile, cr, cs, cb, ce));
     }
 }
 

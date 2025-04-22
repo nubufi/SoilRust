@@ -1,4 +1,10 @@
-use soilrust::{enums::SelectionMethod, models::spt::*};
+use soilrust::{
+    enums::SelectionMethod,
+    models::{
+        soil_profile::{self, SoilProfile},
+        spt::*,
+    },
+};
 
 // -------------------------------------------------------------------------------------------
 // Test NValue
@@ -148,14 +154,22 @@ fn test_apply_corrections() {
         NValue::from_i32(15),
     );
 
-    let sigma_effective = 0.5;
-    let fine_content = 10.0;
+    let soil_profile = SoilProfile {
+        layers: vec![soil_profile::SoilLayer {
+            thickness: 10.0,
+            dry_unit_weight: Some(1.8),
+            saturated_unit_weight: Some(2.0),
+            fine_content: Some(10.0),
+            ..Default::default()
+        }],
+        ground_water_level: 5.0,
+    };
     let cr = 1.1;
     let cs = 0.9;
     let cb = 1.05;
     let ce = 1.2;
 
-    spt.apply_corrections(sigma_effective, fine_content, cr, cs, cb, ce);
+    spt.apply_corrections(&soil_profile, cr, cs, cb, ce);
 
     assert_eq!(spt.n60.unwrap().to_i32(), 30);
     assert_eq!(spt.n90.unwrap().to_i32(), 45);
