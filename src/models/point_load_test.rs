@@ -90,14 +90,19 @@ impl PointLoadExp {
 ///
 /// # Fields
 /// * `exps` - Collection of borehole tests included in the overall test campaign.
+/// * `idealization_method` - Method used for idealizing the test results.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PointLoadTest {
     pub exps: Vec<PointLoadExp>,
+    pub idealization_method: SelectionMethod,
 }
 
 impl PointLoadTest {
-    pub fn new(exps: Vec<PointLoadExp>) -> Self {
-        Self { exps }
+    pub fn new(exps: Vec<PointLoadExp>, idealization_method: SelectionMethod) -> Self {
+        Self {
+            exps,
+            idealization_method,
+        }
     }
 
     pub fn add_borehole(&mut self, exp: PointLoadExp) {
@@ -112,7 +117,13 @@ impl PointLoadTest {
     ///
     /// # Returns
     /// * `PointLoadExp` - Idealized experiment
-    pub fn get_idealized_exp(&self, mode: SelectionMethod, name: String) -> PointLoadExp {
+    pub fn get_idealized_exp(&self, name: String) -> PointLoadExp {
+        if self.exps.is_empty() {
+            return PointLoadExp::new(name, vec![]);
+        }
+
+        let mode = self.idealization_method;
+
         let mut depth_map: BTreeMap<
             OrderedFloat<f64>,
             Vec<(OrderedFloat<f64>, OrderedFloat<f64>)>,

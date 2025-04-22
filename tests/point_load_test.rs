@@ -25,7 +25,7 @@ fn create_test_data() -> PointLoadTest {
         ],
     );
 
-    PointLoadTest::new(vec![sk1, sk2, sk3])
+    PointLoadTest::new(vec![sk1, sk2, sk3], SelectionMethod::Min)
 }
 /// -----------------------------------------------------------------------------------
 #[test]
@@ -59,7 +59,7 @@ fn test_get_sample_at_depth_3() {
 fn test_get_idealized_exp_min_mode() {
     let data = create_test_data();
 
-    let ideal = data.get_idealized_exp(SelectionMethod::Min, "Ideal_Min".into());
+    let ideal = data.get_idealized_exp("Ideal_Min".into());
 
     // Sanity checks
     assert_eq!(ideal.borehole_id, "Ideal_Min");
@@ -85,9 +85,10 @@ fn test_get_idealized_exp_min_mode() {
 
 #[test]
 fn test_get_idealized_exp_avg_mode() {
-    let data = create_test_data();
+    let mut data = create_test_data();
 
-    let ideal = data.get_idealized_exp(SelectionMethod::Avg, "Ideal_Avg".into());
+    data.idealization_method = SelectionMethod::Avg;
+    let ideal = data.get_idealized_exp("Ideal_Avg".into());
 
     // Sanity checks
     assert_eq!(ideal.borehole_id, "Ideal_Avg");
@@ -113,9 +114,10 @@ fn test_get_idealized_exp_avg_mode() {
 
 #[test]
 fn test_get_idealized_exp_max_mode() {
-    let data = create_test_data();
+    let mut data = create_test_data();
 
-    let ideal = data.get_idealized_exp(SelectionMethod::Max, "Ideal_Max".into());
+    data.idealization_method = SelectionMethod::Max;
+    let ideal = data.get_idealized_exp("Ideal_Max".into());
 
     // Sanity checks
     assert_eq!(ideal.borehole_id, "Ideal_Max");
