@@ -286,6 +286,7 @@ pub struct SPT {
     pub diameter_correction_factor: f64,
     pub sampler_correction_factor: f64,
     pub rod_length_correction_factor: f64,
+    pub idealization_method: SelectionMethod,
 }
 impl SPT {
     /// Create a new SPT
@@ -295,11 +296,13 @@ impl SPT {
     /// * `diameter_correction_factor` - Borehole diameter correction factor
     /// * `sampler_correction_factor` - Sampler correction factor
     /// * `rod_length_correction_factor` - Rod length correction factor
+    /// * `idealization_method` - Idealization method to use when combining the layers
     pub fn new(
         energy_correction_factor: f64,
         diameter_correction_factor: f64,
         sampler_correction_factor: f64,
         rod_length_correction_factor: f64,
+        idealization_method: SelectionMethod,
     ) -> Self {
         Self {
             exps: Vec::new(),
@@ -307,6 +310,7 @@ impl SPT {
             diameter_correction_factor,
             sampler_correction_factor,
             rod_length_correction_factor,
+            idealization_method,
         }
     }
 
@@ -338,12 +342,12 @@ impl SPT {
     /// Get the idealized experiment
     ///
     /// # Arguments
-    /// * `mode` - Idealized mode to use when combining the layers
     /// * `name` - Name of the idealized experiment
     ///
     /// # Returns
     /// * `SPTExp` - Idealized experiment
-    pub fn get_idealized_exp(&self, mode: SelectionMethod, name: String) -> SPTExp {
+    pub fn get_idealized_exp(&self, name: String) -> SPTExp {
+        let mode = self.idealization_method;
         let mut depth_map: BTreeMap<OrderedFloat<f64>, Vec<NValue>> = BTreeMap::new();
 
         // Collect all unique depths and corresponding `n` values

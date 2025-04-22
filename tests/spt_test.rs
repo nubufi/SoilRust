@@ -183,16 +183,17 @@ fn test_get_idealized_exp() {
     let cs = 0.9;
     let cb = 1.05;
     let ce = 1.2;
-    let mut spt = SPT::new(ce, cb, cs, cr);
+    let mut spt = SPT::new(ce, cb, cs, cr, SelectionMethod::Min);
     spt.add_exp(exp1);
     spt.add_exp(exp2);
 
-    let idealized_exp_min =
-        spt.get_idealized_exp(SelectionMethod::Min, "idealized_exp_min".to_string());
-    let idealized_exp_avg =
-        spt.get_idealized_exp(SelectionMethod::Avg, "idealized_exp_avg".to_string());
-    let idealized_exp_max =
-        spt.get_idealized_exp(SelectionMethod::Max, "idealized_exp_max".to_string());
+    let idealized_exp_min = spt.get_idealized_exp("idealized_exp_min".to_string());
+
+    spt.idealization_method = SelectionMethod::Avg;
+    let idealized_exp_avg = spt.get_idealized_exp("idealized_exp_avg".to_string());
+
+    spt.idealization_method = SelectionMethod::Max;
+    let idealized_exp_max = spt.get_idealized_exp("idealized_exp_max".to_string());
 
     assert_eq!(idealized_exp_min.name, "idealized_exp_min");
     assert_eq!(idealized_exp_avg.name, "idealized_exp_avg");
