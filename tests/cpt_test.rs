@@ -80,14 +80,14 @@ fn create_test_cpt() -> CPT {
         "Exp2".into(),
     );
 
-    CPT::new(vec![exp1, exp2])
+    CPT::new(vec![exp1, exp2], SelectionMethod::Min)
 }
 
 #[test]
 fn test_get_idealized_exp_min_mode() {
     let cpt = create_test_cpt();
 
-    let ideal = cpt.get_idealized_exp(SelectionMethod::Min, "Ideal_Min".into());
+    let ideal = cpt.get_idealized_exp("Ideal_Min".into());
 
     // Sanity checks
     assert_eq!(ideal.name, "Ideal_Min");
@@ -108,9 +108,10 @@ fn test_get_idealized_exp_min_mode() {
 
 #[test]
 fn test_get_idealized_exp_avg_mode() {
-    let cpt = create_test_cpt();
+    let mut cpt = create_test_cpt();
 
-    let ideal = cpt.get_idealized_exp(SelectionMethod::Avg, "Ideal_Avg".into());
+    cpt.idealization_method = SelectionMethod::Avg;
+    let ideal = cpt.get_idealized_exp("Ideal_Avg".into());
 
     // Sanity checks
     assert_eq!(ideal.name, "Ideal_Avg");
@@ -131,9 +132,10 @@ fn test_get_idealized_exp_avg_mode() {
 
 #[test]
 fn test_get_idealized_exp_max_mode() {
-    let cpt = create_test_cpt();
+    let mut cpt = create_test_cpt();
 
-    let ideal = cpt.get_idealized_exp(SelectionMethod::Max, "Ideal_Max".into());
+    cpt.idealization_method = SelectionMethod::Max;
+    let ideal = cpt.get_idealized_exp("Ideal_Max".into());
 
     println!("{:?}", ideal);
     // Sanity checks

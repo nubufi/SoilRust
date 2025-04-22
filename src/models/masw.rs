@@ -106,6 +106,14 @@ pub struct Masw {
 }
 
 impl Masw {
+    /// Creates a new `Masw` instance.
+    ///
+    /// # Arguments
+    /// * `exps` - A vector of `MaswExp` instances.
+    /// * `idealization_method` - The method used for idealization.
+    ///
+    /// # Returns
+    /// A new `Masw` instance.
     pub fn new(mut exps: Vec<MaswExp>, idealization_method: SelectionMethod) -> Self {
         for exp in &mut exps {
             exp.calc_depths();
@@ -116,10 +124,15 @@ impl Masw {
         }
     }
 
+    /// Adds a new `MaswExp` instance to the `Masw` collection.
+    ///
+    /// # Arguments
+    /// * `exp` - The `MaswExp` instance to add to the collection.
     pub fn add_exp(&mut self, exp: MaswExp) {
         self.exps.push(exp);
     }
 
+    /// Calculates and updates the depth of each MASW experiment layer in the model.
     pub fn calc_depths(&mut self) {
         for exp in &mut self.exps {
             exp.calc_depths();
@@ -130,7 +143,6 @@ impl Masw {
     /// The idealized experiment is created by combining the corresponding layers from each individual experiment in the model.
     ///
     /// # Arguments
-    /// * `mode` - The idealized mode to use when combining the layers.
     /// * `name` - The name of the idealized experiment.
     ///
     /// # Returns

@@ -116,6 +116,7 @@ impl CPTExp {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CPT {
     pub exps: Vec<CPTExp>,
+    pub idealization_method: SelectionMethod,
 }
 
 impl CPT {
@@ -123,8 +124,12 @@ impl CPT {
     ///
     /// # Arguments
     /// * `exps` - A vector of `CPTExp` instances.
-    pub fn new(exps: Vec<CPTExp>) -> Self {
-        Self { exps }
+    /// * `idealization_method` - The method used for idealization.
+    pub fn new(exps: Vec<CPTExp>, idealization_method: SelectionMethod) -> Self {
+        Self {
+            exps,
+            idealization_method,
+        }
     }
 
     /// Adds a new `CPTExp` instance to the `CPT` collection.
@@ -139,15 +144,16 @@ impl CPT {
     /// The idealized experiment is created by combining the corresponding layers from each individual experiment in the model.
     ///
     /// # Arguments
-    /// * `mode` - The idealized mode to use when combining the layers.
     /// * `name` - The name of the idealized experiment.
     ///
     /// # Returns
     /// A new `CPTExp` instance representing the idealized experiment.
-    pub fn get_idealized_exp(&self, mode: SelectionMethod, name: String) -> CPTExp {
+    pub fn get_idealized_exp(&self, name: String) -> CPTExp {
         if self.exps.is_empty() {
             return CPTExp::new(vec![], name);
         }
+
+        let mode = self.idealization_method;
 
         // 1. Collect unique depths across all experiments
         let mut unique_depths = BTreeSet::new();
