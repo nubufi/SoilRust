@@ -8,14 +8,12 @@ pub fn setup_soil_profile() -> SoilProfile {
                 thickness: 2.0,
                 dry_unit_weight: Some(1.8),
                 saturated_unit_weight: Some(2.0),
-                soil_class: "Clay".to_string(),
                 ..Default::default()
             },
             SoilLayer {
                 thickness: 3.0,
                 dry_unit_weight: Some(1.6),
                 saturated_unit_weight: Some(1.9),
-                soil_class: "Sand".to_string(),
                 ..Default::default()
             },
         ],

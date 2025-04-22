@@ -11,7 +11,7 @@ pub struct SoilLayer {
     pub natural_unit_weight: Option<f64>,       // t/m³
     pub dry_unit_weight: Option<f64>,           // t/m³
     pub saturated_unit_weight: Option<f64>,     // t/m³
-    pub soil_class: String,                     // Soil classification
+    pub soil_class: Option<String>,             // Soil classification
     pub depth: Option<f64>,                     // meter
     pub center: Option<f64>,                    // meter
     pub damping_ratio: Option<f64>,             // percentage
@@ -40,7 +40,7 @@ impl Default for SoilLayer {
             natural_unit_weight: None,
             dry_unit_weight: None,
             saturated_unit_weight: None,
-            soil_class: String::new(),
+            soil_class: None,
             depth: None,
             center: None,
             damping_ratio: None,
