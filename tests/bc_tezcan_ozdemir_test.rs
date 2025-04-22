@@ -1,7 +1,10 @@
 use approx::assert_abs_diff_eq;
-use soilrust::models::{
-    masw::{MaswExp, MaswLayer},
-    soil_profile::{SoilLayer, SoilProfile},
+use soilrust::{
+    enums::SelectionMethod,
+    models::{
+        masw::{Masw, MaswExp, MaswLayer},
+        soil_profile::{SoilLayer, SoilProfile},
+    },
 };
 
 fn create_soil_profile() -> SoilProfile {
@@ -17,15 +20,18 @@ fn create_soil_profile() -> SoilProfile {
     }
 }
 
-fn create_masw_exp(vs: f64) -> MaswExp {
-    MaswExp {
-        layers: vec![MaswLayer {
-            thickness: 5.0,
-            depth: Some(5.0),
-            vs,
-            vp: 0.0,
+fn create_masw_exp(vs: f64) -> Masw {
+    Masw {
+        exps: vec![MaswExp {
+            layers: vec![MaswLayer {
+                thickness: 5.0,
+                depth: Some(5.0),
+                vs,
+                vp: 0.0,
+            }],
+            name: "Test".to_string(),
         }],
-        name: "Test".to_string(),
+        idealization_method: SelectionMethod::Min,
     }
 }
 
@@ -33,7 +39,7 @@ fn create_masw_exp(vs: f64) -> MaswExp {
 #[test]
 fn test_bc_tezcan_ozdemir_1() {
     let soil_profile: SoilProfile = create_soil_profile();
-    let masw_exp = create_masw_exp(4001.0);
+    let mut masw_exp = create_masw_exp(4001.0);
     let foundation =
         soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None, None);
 
@@ -41,7 +47,7 @@ fn test_bc_tezcan_ozdemir_1() {
 
     let result = soilrust::bearing_capacity::tezcan_ozdemir::calc_bearing_capacity(
         soil_profile,
-        masw_exp,
+        &mut masw_exp,
         foundation,
         foundation_pressure,
     );
@@ -55,7 +61,7 @@ fn test_bc_tezcan_ozdemir_1() {
 #[test]
 fn test_bc_tezcan_ozdemir_2() {
     let soil_profile: SoilProfile = create_soil_profile();
-    let masw_exp = create_masw_exp(3000.0);
+    let mut masw_exp = create_masw_exp(3000.0);
     let foundation =
         soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None, None);
 
@@ -63,7 +69,7 @@ fn test_bc_tezcan_ozdemir_2() {
 
     let result = soilrust::bearing_capacity::tezcan_ozdemir::calc_bearing_capacity(
         soil_profile,
-        masw_exp,
+        &mut masw_exp,
         foundation,
         foundation_pressure,
     );
@@ -77,7 +83,7 @@ fn test_bc_tezcan_ozdemir_2() {
 #[test]
 fn test_bc_tezcan_ozdemir_3() {
     let soil_profile: SoilProfile = create_soil_profile();
-    let masw_exp = create_masw_exp(400.0);
+    let mut masw_exp = create_masw_exp(400.0);
     let foundation =
         soilrust::models::foundation::Foundation::new(5.0, 1.0, 1.0, None, None, None, None);
 
@@ -85,7 +91,7 @@ fn test_bc_tezcan_ozdemir_3() {
 
     let result = soilrust::bearing_capacity::tezcan_ozdemir::calc_bearing_capacity(
         soil_profile,
-        masw_exp,
+        &mut masw_exp,
         foundation,
         foundation_pressure,
     );

@@ -1,4 +1,8 @@
-use crate::models::{foundation::Foundation, masw::MaswExp, soil_profile::SoilProfile};
+use crate::models::{
+    foundation::Foundation,
+    masw::{Masw, MaswExp},
+    soil_profile::SoilProfile,
+};
 use serde::Serialize;
 
 /// Represents the bearing capacity result for a given soil and foundation setup.
@@ -76,7 +80,7 @@ fn get_unit_weight(df: f64, soil_profile: SoilProfile) -> f64 {
 ///
 /// # Arguments
 /// - `soil_profile`: A struct containing the soil layers and properties.
-/// - `masw_exp`: A struct representing the MASW experiment data.
+/// - `masw`: A struct representing the MASW data.
 /// - `foundation`: A struct representing the foundation geometry (e.g., depth).
 /// - `foundation_pressure`: The pressure applied by the foundation in t/m2.
 ///
@@ -84,10 +88,11 @@ fn get_unit_weight(df: f64, soil_profile: SoilProfile) -> f64 {
 /// - `f64`: The calculated bearing capacity in kPa.
 pub fn calc_bearing_capacity(
     soil_profile: SoilProfile,
-    masw_exp: MaswExp,
+    masw: &mut Masw,
     foundation: Foundation,
     foundation_pressure: f64,
 ) -> Output {
+    let masw_exp = masw.get_idealized_exp("idealized".to_string());
     // Validate the input parameters
     validate_input(&masw_exp, &soil_profile, &foundation).unwrap();
 

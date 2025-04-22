@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::spt::SPTExp;
+use crate::models::spt::{SPTExp, SPT};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NLayerData {
@@ -24,6 +24,14 @@ pub struct SptSoilClassificationResult {
     pub soil_class: String,
 }
 
+fn prepare_spt_exp(spt: &mut SPT) -> SPTExp {
+    spt.calc_all_n();
+
+    let mut spt_exp = spt.get_idealized_exp("idealized".to_string());
+    spt_exp.apply_energy_correction(spt.energy_correction_factor);
+
+    spt_exp
+}
 /// Calculates (N60)_30 based on the harmonic average over the top 30m of the profile.
 pub fn compute_n_30(spt_exp: &SPTExp) -> Vec<NLayerData> {
     let mut result = Vec::new();
@@ -69,13 +77,15 @@ pub fn compute_n_30(spt_exp: &SPTExp) -> Vec<NLayerData> {
 ///
 /// # Arguments
 ///
-/// * `spt_exp` - A mutable reference to a `SptExp` object containing the spt data.
+/// * `spt` - A mutable reference to a `Spt` object containing the spt data.
 ///
 /// # Returns
 ///
 /// A `SptSoilClassificationResult` object containing the calculated local soil class and other related data.
-pub fn calc_lsc_by_spt(spt_exp: &mut SPTExp) -> SptSoilClassificationResult {
-    let n_layers = compute_n_30(spt_exp);
+pub fn calc_lsc_by_spt(spt: &mut SPT) -> SptSoilClassificationResult {
+    let spt_exp = prepare_spt_exp(spt);
+
+    let n_layers = compute_n_30(&spt_exp);
 
     let sum_h_over_n: f64 = n_layers.iter().map(|l| l.h_over_n).sum();
 

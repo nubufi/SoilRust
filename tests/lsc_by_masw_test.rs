@@ -1,7 +1,8 @@
 use approx::assert_abs_diff_eq;
 use soilrust::{
+    enums::SelectionMethod,
     local_soil_class::by_vs::calc_lsc_by_vs,
-    models::masw::{MaswExp, MaswLayer},
+    models::masw::{Masw, MaswExp, MaswLayer},
 };
 
 fn create_layer(thickness: f64, vs: f64) -> MaswLayer {
@@ -21,7 +22,12 @@ fn test_case_1() {
         layers: vec![create_layer(5.0, 1000.0), create_layer(10.0, 1500.0)], // total depth = 15
     };
 
-    let result = calc_lsc_by_vs(&mut exp.clone());
+    let mut masw = Masw {
+        exps: vec![exp],
+        idealization_method: SelectionMethod::Min,
+    };
+
+    let result = calc_lsc_by_vs(&mut masw);
     assert_eq!(result.layers.len(), 2);
     assert_abs_diff_eq!(result.vs_30, 1285.71, epsilon = 1e-2); // harmonic average
     assert_eq!(result.soil_class, "ZB"); // low vs_30 leads to ZB
@@ -39,7 +45,12 @@ fn test_case_2() {
         ],
     };
 
-    let result = calc_lsc_by_vs(&mut exp.clone());
+    let mut masw = Masw {
+        exps: vec![exp],
+        idealization_method: SelectionMethod::Min,
+    };
+
+    let result = calc_lsc_by_vs(&mut masw);
 
     assert_eq!(result.layers.len(), 2);
     assert_eq!(result.vs_30, 3000.);
@@ -58,7 +69,12 @@ fn test_case_3() {
         ],
     };
 
-    let result = calc_lsc_by_vs(&mut exp.clone());
+    let mut masw = Masw {
+        exps: vec![exp],
+        idealization_method: SelectionMethod::Min,
+    };
+
+    let result = calc_lsc_by_vs(&mut masw);
 
     assert_eq!(result.layers.len(), 3);
     assert_abs_diff_eq!(result.vs_30, 1714.28, epsilon = 1e-2); // harmonic average

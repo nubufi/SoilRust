@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::masw::MaswExp;
+use crate::models::masw::{Masw, MaswExp};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VsLayerData {
@@ -59,14 +59,16 @@ pub fn compute_vs_30(masw_exp: &MaswExp) -> Vec<VsLayerData> {
 ///
 /// # Arguments
 ///
-/// * `masw_exp` - A mutable reference to a `MaswExp` object containing the masw data.
+/// * `masw` - A mutable reference to a `Masw` object containing the masw data.
 ///
 /// # Returns
 ///
 /// A `VsSoilClassificationResult` object containing the calculated local soil class and other related data.
-pub fn calc_lsc_by_vs(masw_exp: &mut MaswExp) -> VsSoilClassificationResult {
+pub fn calc_lsc_by_vs(masw: &mut Masw) -> VsSoilClassificationResult {
+    let mut masw_exp = masw.get_idealized_exp("idealized".to_string());
     masw_exp.calc_depths();
-    let vs_layers = compute_vs_30(masw_exp);
+
+    let vs_layers = compute_vs_30(&masw_exp);
 
     let sum_h_over_vs: f64 = vs_layers.iter().map(|l| l.h_over_vs).sum();
 

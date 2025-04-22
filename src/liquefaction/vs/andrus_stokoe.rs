@@ -4,7 +4,10 @@ use crate::{
         helper_functions::{calc_csr, calc_msf, calc_rd},
         models::{LiquefactionLayerResult, LiquefactionResult},
     },
-    models::{masw::MaswExp, soil_profile::SoilProfile},
+    models::{
+        masw::{Masw, MaswExp},
+        soil_profile::SoilProfile,
+    },
 };
 
 /// Validates the soil profile and MASW data
@@ -120,11 +123,15 @@ pub fn calc_settlement(fs: f64, layer_thickness: f64, vs1: f64) -> f64 {
 /// * `LiquefactionResult` - Result of liquefaction analysis
 pub fn calc_liquefacion(
     soil_profile: &SoilProfile,
-    masw: &MaswExp,
+    masw: &mut Masw,
     pga: f64,
     mw: f64,
 ) -> LiquefactionResult {
-    validate(soil_profile, masw).unwrap();
+    let mut masw_exp = masw.get_idealized_exp("idealized".to_string());
+    masw_exp.calc_depths();
+
+    validate(soil_profile, &masw_exp).unwrap();
+
     let msf = calc_msf(mw);
     let mut layer_results = Vec::new();
 
@@ -136,7 +143,7 @@ pub fn calc_liquefacion(
         let normal_stress = soil_profile.calc_normal_stress(depth);
         let soil_layer = soil_profile.get_layer_at_depth(depth);
         let plasticity_index = soil_layer.plasticity_index.unwrap();
-        let masw_layer = masw.get_layer_at_depth(depth);
+        let masw_layer = masw_exp.get_layer_at_depth(depth);
         let vs = masw_layer.vs;
         let cn = calc_cn(effective_stress);
         let vs1 = vs * cn;

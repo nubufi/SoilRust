@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::models::point_load_test::PointLoadExp;
+use crate::models::point_load_test::{PointLoadExp, PointLoadTest};
 
 /// Represents the bearing capacity result for a given soil and foundation setup.
 #[derive(Debug, Serialize)]
@@ -97,7 +97,7 @@ pub fn get_generalized_c_value(d: f64) -> f64 {
 /// Calculates the bearing capacity of a foundation based on point load test results.
 ///
 /// # Arguments
-/// * `point_load_test_exp` - The point load test experiment data.
+/// * `point_load_test` - The point load test data.
 /// * `df` - Depth at which to calculate the bearing capacity.
 /// * `foundation_pressure` - The pressure exerted by the foundation.
 /// * `safety_factor` - The safety factor for the design.
@@ -105,20 +105,20 @@ pub fn get_generalized_c_value(d: f64) -> f64 {
 /// # Returns
 /// * `Output` - The bearing capacity result containing various parameters.
 pub fn calc_bearing_capacity(
-    point_load_test_exp: PointLoadExp,
+    point_load_test: PointLoadTest,
     df: f64,
     foundation_pressure: f64,
     safety_factor: f64,
 ) -> Output {
+    let point_load_test_exp = point_load_test.get_idealized_exp("idealized".to_string());
     // Validate inputs
-    if let Err(e) = validate(
+    validate(
         point_load_test_exp.clone(),
         df,
         foundation_pressure,
         safety_factor,
-    ) {
-        panic!("Validation error: {}", e);
-    }
+    )
+    .unwrap();
     const MPA_TO_TON: f64 = 101.97162; // Conversion factor from MPa to ton/m2
     let sample = point_load_test_exp.get_sample_at_depth(df);
 

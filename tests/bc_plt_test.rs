@@ -1,7 +1,8 @@
 use approx::assert_abs_diff_eq;
 use soilrust::{
     bearing_capacity::point_load_test::{calc_bearing_capacity, get_generalized_c_value},
-    models::point_load_test::{PointLoadExp, PointLoadSample},
+    enums::SelectionMethod,
+    models::point_load_test::{PointLoadExp, PointLoadSample, PointLoadTest},
 };
 
 #[test]
@@ -22,12 +23,16 @@ fn test_get_generalized_c_value() {
 #[test]
 fn test_calc_bearing_capacity() {
     let exp = PointLoadExp::new("Test".to_string(), vec![PointLoadSample::new(20., 2., 50.)]);
+    let pt = PointLoadTest {
+        exps: vec![exp],
+        idealization_method: SelectionMethod::Min,
+    };
 
     let df = 20.0;
     let foundation_pressure = 100.0;
     let safety_factor = 2.0;
 
-    let result = calc_bearing_capacity(exp, df, foundation_pressure, safety_factor);
+    let result = calc_bearing_capacity(pt, df, foundation_pressure, safety_factor);
 
     assert_eq!(result.c, 23.0);
     assert_abs_diff_eq!(result.ucs, 46.0, epsilon = 1e-5);

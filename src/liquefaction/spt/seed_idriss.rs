@@ -4,7 +4,10 @@ use crate::{
         helper_functions::{calc_csr, calc_msf, calc_rd},
         models::{LiquefactionLayerResult, LiquefactionResult},
     },
-    models::{soil_profile::SoilProfile, spt::SPTExp},
+    models::{
+        soil_profile::SoilProfile,
+        spt::{SPTExp, SPT},
+    },
 };
 
 /// Validates the soil profile and SPT data
@@ -36,6 +39,21 @@ fn validate(soil_profile: &SoilProfile, spt: &SPTExp) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+fn prepare_spt_exp(spt: &mut SPT, soil_profile: &SoilProfile) -> SPTExp {
+    spt.calc_all_n();
+    let cr = spt.rod_length_correction_factor;
+    let cs = spt.sampler_correction_factor;
+    let cb = spt.diameter_correction_factor;
+    let ce = spt.energy_correction_factor;
+
+    let mut spt_exp = spt.get_idealized_exp("idealized".to_string());
+    spt_exp.apply_corrections(soil_profile, cr, cs, cb, ce);
+
+    spt_exp.calc_thicknesses();
+
+    spt_exp
 }
 
 /// Calculates cyclic resistance ratio (CRR) based on N1_60 and effective stress
@@ -104,15 +122,18 @@ pub fn calc_settlement(fs: f64, layer_thickness: f64, n60: i32) -> f64 {
 /// * `LiquefactionResult` - Result of liquefaction analysis
 pub fn calc_liquefacion(
     soil_profile: &SoilProfile,
-    spt: &SPTExp,
+    spt: &mut SPT,
     pga: f64,
     mw: f64,
 ) -> LiquefactionResult {
-    validate(soil_profile, spt).unwrap();
+    let spt_exp = prepare_spt_exp(spt, soil_profile);
+
+    validate(soil_profile, &spt_exp).unwrap();
+
     let msf = calc_msf(mw);
     let mut layer_results = Vec::new();
 
-    for blow in spt.blows.iter() {
+    for blow in spt_exp.blows.iter() {
         let thickness = blow.thickness.unwrap();
         let depth = blow.depth;
         let rd = calc_rd(depth);
