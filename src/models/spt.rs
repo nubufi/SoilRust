@@ -127,6 +127,13 @@ impl SPTBlow {
         }
     }
 
+    /// Calculate N value from n2, and n3
+    pub fn calc_n(&mut self) {
+        if let (Some(n2), Some(n3)) = (self.n2, self.n3) {
+            self.n = Some(n2.sum_with(n3));
+        }
+    }
+
     /// Apply energy correction
     ///
     /// # Arguments
@@ -209,6 +216,23 @@ impl SPTExp {
         Self { blows, name }
     }
 
+    /// Calculate N values for all blows
+    pub fn calc_all_n(&mut self) {
+        for blow in &mut self.blows {
+            blow.calc_n();
+        }
+    }
+
+    /// Apply energy correction
+    ///
+    /// # Arguments
+    /// * `energy_correction_factor` - Energy correction factor to convert N value to N60
+    pub fn apply_energy_correction(&mut self, energy_correction_factor: f64) {
+        for blow in &mut self.blows {
+            blow.apply_energy_correction(energy_correction_factor);
+        }
+    }
+
     /// Add a new blow to the experiment
     ///
     /// # Arguments
@@ -283,6 +307,23 @@ impl SPT {
             diameter_correction_factor,
             sampler_correction_factor,
             rod_length_correction_factor,
+        }
+    }
+
+    /// Calculate N values for all experiments
+    pub fn calc_all_n(&mut self) {
+        for exp in &mut self.exps {
+            exp.calc_all_n();
+        }
+    }
+
+    /// Apply energy correction
+    ///
+    /// # Arguments
+    /// * `energy_correction_factor` - Energy correction factor to convert N value to N60
+    pub fn apply_energy_correction(&mut self, energy_correction_factor: f64) {
+        for exp in &mut self.exps {
+            exp.apply_energy_correction(energy_correction_factor);
         }
     }
 
