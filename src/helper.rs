@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 /// Performs linear interpolation for a given x value based on provided x and y vectors.
 ///
 /// # Arguments
@@ -36,4 +38,40 @@ pub fn interp1d(x_values: &[f64], y_values: &[f64], x: f64) -> f64 {
     }
 
     panic!("Interpolation error: x-value out of interpolation range");
+}
+
+/// Validates a single optional numeric field against optional bounds.
+///
+/// # Arguments
+/// * `field_name` - Field name for use in the error message.
+/// * `value` - Option<T> where T: numeric type (e.g., f64, i32, etc.).
+/// * `min` - Optional minimum bound (inclusive).
+/// * `max` - Optional maximum bound (inclusive).
+///
+/// # Returns
+/// * `Ok(())` if the value is present and within bounds, otherwise `Err(String)`
+pub fn validate_field<T>(
+    field_name: &str,
+    value: Option<T>,
+    min: Option<T>,
+    max: Option<T>,
+) -> Result<(), String>
+where
+    T: PartialOrd + Display + Copy,
+{
+    let val = value.ok_or_else(|| format!("{} must be provided.", field_name))?;
+
+    if let Some(min_val) = min {
+        if val < min_val {
+            return Err(format!("{} must be ≥ {}.", field_name, min_val));
+        }
+    }
+
+    if let Some(max_val) = max {
+        if val > max_val {
+            return Err(format!("{} must be ≤ {}.", field_name, max_val));
+        }
+    }
+
+    Ok(())
 }

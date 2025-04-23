@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+
+use crate::helper::validate_field;
 /// Represents a single soil layer in a geotechnical engineering model.
 ///
 /// This struct contains essential soil properties used for analysis, such as
@@ -70,6 +72,64 @@ impl SoilLayer {
             thickness,
             ..Default::default()
         }
+    }
+    /// Validate based on a list of required fields by name.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// * `Ok(())` if all required fields are valid.
+    pub fn validate_fields(&self, fields: &[&str]) -> Result<(), String> {
+        for &field in fields {
+            match field {
+                "thickness" => {
+                    validate_field("thickness", Some(self.thickness), Some(0.0001), None)?
+                }
+                "dry_unit_weight" => validate_field(
+                    "dry_unit_weight",
+                    self.dry_unit_weight,
+                    Some(0.1),
+                    Some(10.0),
+                )?,
+                "saturated_unit_weight" => validate_field(
+                    "saturated_unit_weight",
+                    self.saturated_unit_weight,
+                    Some(0.1),
+                    Some(10.0),
+                )?,
+                "cu" => validate_field("cu", self.cu, Some(0.0), None)?,
+                "c_prime" => validate_field("c_prime", self.c_prime, Some(0.0), None)?,
+                "phi_u" => validate_field("phi_u", self.phi_u, Some(0.0), Some(90.))?,
+                "phi_prime" => validate_field("phi_prime", self.phi_prime, Some(0.0), Some(90.))?,
+                "compression_index" => {
+                    validate_field("compression_index", self.compression_index, Some(0.0), None)?
+                }
+                "preconsolidation_pressure" => validate_field(
+                    "preconsolidation_pressure",
+                    self.preconsolidation_pressure,
+                    Some(0.0),
+                    None,
+                )?,
+                "shear_wave_velocity" => validate_field(
+                    "shear_wave_velocity",
+                    self.shear_wave_velocity,
+                    Some(0.0),
+                    None,
+                )?,
+                "fine_content" => {
+                    validate_field("fine_content", self.fine_content, Some(0.0), Some(100.))?
+                }
+                other => {
+                    return Err(format!(
+                        "Validation rule not implemented for field '{}'",
+                        other
+                    ))
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -214,5 +274,31 @@ impl SoilProfile {
             let pore_pressure = (depth - self.ground_water_level) * 0.981; // t/m³ for water
             normal_stress - pore_pressure
         }
+    }
+
+    /// Validates the soil profile and its layers.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// * `Ok(())` if the profile is valid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), String> {
+        if self.layers.is_empty() {
+            return Err("Soil profile must contain at least one layer.".to_string());
+        }
+
+        for layer in &self.layers {
+            layer.validate_fields(fields)?;
+        }
+
+        validate_field(
+            "ground_water_level",
+            Some(self.ground_water_level),
+            Some(0.0),
+            None,
+        )?;
+
+        Ok(())
     }
 }
