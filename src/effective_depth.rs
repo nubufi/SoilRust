@@ -83,6 +83,8 @@ pub fn calc_effective_depth(
     foundation_data: &Foundation,
     foundation_pressure: f64,
 ) -> Result<f64, ValidationError> {
+    validate_input(soil_profile, foundation_data, foundation_pressure)?;
+
     let df = foundation_data.foundation_depth.unwrap();
     let b = foundation_data.foundation_width.unwrap();
     let l = foundation_data.foundation_length.unwrap();
