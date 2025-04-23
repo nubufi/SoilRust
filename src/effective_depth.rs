@@ -1,7 +1,35 @@
-/// Module for calculating effective stress depth using the bisection method.
-use std::f64;
+use crate::{
+    models::{foundation::Foundation, soil_profile::SoilProfile},
+    validation::{validate_field, ValidationError},
+};
 
-use crate::models::{foundation::Foundation, soil_profile::SoilProfile};
+/// Validates the input data for elastic settlement calculations.
+///
+/// # Arguments
+/// * `soil_profile` - The soil profile data.
+/// * `foundation` - The foundation data.
+/// * `foundation_pressure` - The foundation pressure (q) [t/m²].
+///
+/// # Returns
+/// * `Result<(), &'static str>`: Ok if valid, Err with a message if invalid.
+pub fn validate_input(
+    soil_profile: &SoilProfile,
+    foundation: &Foundation,
+    foundation_pressure: f64,
+) -> Result<(), ValidationError> {
+    soil_profile.validate(&["thickness", "dry_unit_weight", "saturated_unit_weight"])?;
+    foundation.validate(&["foundation_depth", "foundation_width", "foundation_length"])?;
+
+    validate_field(
+        "foundation_pressure",
+        Some(foundation_pressure),
+        Some(0.0),
+        None,
+        "loads",
+    )?;
+
+    Ok(())
+}
 /// Calculates the difference between the stress increment (Δσ) and 10% of effective stress at depth `z`.
 fn get_difference(z: f64, f: f64, b: f64, df: f64, l: f64, sp: &SoilProfile) -> f64 {
     let dg = f / ((b + z - df) * (l + z - df));
@@ -54,13 +82,15 @@ pub fn calc_effective_depth(
     soil_profile: &SoilProfile,
     foundation_data: &Foundation,
     foundation_pressure: f64,
-) -> f64 {
-    let df = foundation_data.foundation_depth;
-    let b = foundation_data.foundation_width;
-    let l = foundation_data.foundation_length;
+) -> Result<f64, ValidationError> {
+    let df = foundation_data.foundation_depth.unwrap();
+    let b = foundation_data.foundation_width.unwrap();
+    let l = foundation_data.foundation_length.unwrap();
 
     let q_net = foundation_pressure - soil_profile.calc_normal_stress(df);
     let f = q_net * b * l;
 
-    find_effective_depth(f, b, df, l, soil_profile)
+    let result = find_effective_depth(f, b, df, l, soil_profile);
+
+    Ok(result)
 }

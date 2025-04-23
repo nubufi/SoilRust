@@ -1,4 +1,5 @@
 use crate::enums::SelectionMethod;
+use crate::validation::{validate_field, ValidationError};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -96,7 +97,7 @@ impl Ord for NValue {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SPTBlow {
     pub thickness: Option<f64>,
-    pub depth: f64,
+    pub depth: Option<f64>,
     pub n1: Option<NValue>,
     pub n2: Option<NValue>,
     pub n3: Option<NValue>,
@@ -120,13 +121,77 @@ impl SPTBlow {
     /// * `n3` - N-value of the third blow
     pub fn new(depth: f64, n1: NValue, n2: NValue, n3: NValue) -> Self {
         Self {
-            depth,
+            depth: Some(depth),
             n1: Some(n1),
             n2: Some(n2),
             n3: Some(n3),
             n: Some(n2.sum_with(n3)),
             ..Default::default()
         }
+    }
+
+    /// Validates specific fields of the SPTBlow using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        for &field in fields {
+            let result = match field {
+                "depth" => validate_field("depth", self.depth, Some(0.0), None, "spt"),
+                "thickness" => validate_field("thickness", self.thickness, Some(0.0), None, "spt"),
+                "n1" => {
+                    if let Some(n1) = self.n1 {
+                        validate_field("n1", Some(n1.to_i32()), Some(1), None, "spt")
+                    } else {
+                        Err(ValidationError {
+                            code: "spt.n1.missing".into(),
+                            message: "N1 value is missing in SptBlow".into(),
+                        })
+                    }
+                }
+                "n2" => {
+                    if let Some(n2) = self.n2 {
+                        validate_field("n2", Some(n2.to_i32()), Some(1), None, "spt")
+                    } else {
+                        Err(ValidationError {
+                            code: "spt.n2.missing".into(),
+                            message: "N2 value is missing in SptBlow".into(),
+                        })
+                    }
+                }
+                "n3" => {
+                    if let Some(n3) = self.n3 {
+                        validate_field("n3", Some(n3.to_i32()), Some(1), None, "spt")
+                    } else {
+                        Err(ValidationError {
+                            code: "spt.n3.missing".into(),
+                            message: "N3 value is missing in SptBlow".into(),
+                        })
+                    }
+                }
+                "n" => {
+                    if let Some(n) = self.n {
+                        validate_field("n", Some(n.to_i32()), Some(1), None, "spt")
+                    } else {
+                        Err(ValidationError {
+                            code: "spt.n.missing".into(),
+                            message: "N value is missing in SptBlow".into(),
+                        })
+                    }
+                }
+                unknown => Err(ValidationError {
+                    code: "spt.invalid_field".into(),
+                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                }),
+            };
+
+            result?; // propagate error if any field fails
+        }
+
+        Ok(())
     }
 
     /// Calculate N value from n2, and n3
@@ -187,10 +252,10 @@ impl SPTBlow {
         ce: f64,
     ) {
         self.apply_energy_correction(ce);
-        self.set_cn(soil_profile.calc_effective_stress(self.depth));
+        self.set_cn(soil_profile.calc_effective_stress(self.depth.unwrap()));
         self.set_alpha_beta(
             soil_profile
-                .get_layer_at_depth(self.depth)
+                .get_layer_at_depth(self.depth.unwrap())
                 .fine_content
                 .unwrap_or(0.0),
         );
@@ -253,8 +318,8 @@ impl SPTExp {
     pub fn calc_thicknesses(&mut self) {
         let mut prev_depth = 0.0;
         for blow in &mut self.blows {
-            blow.thickness = Some(blow.depth - prev_depth);
-            prev_depth = blow.depth;
+            blow.thickness = Some(blow.depth.unwrap() - prev_depth);
+            prev_depth = blow.depth.unwrap();
         }
     }
 
@@ -278,6 +343,25 @@ impl SPTExp {
             .iter_mut()
             .for_each(|blow| blow.apply_corrections(soil_profile, cr, cs, cb, ce));
     }
+    /// Validates specific fields of the SPTExp using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.blows.is_empty() {
+            return Err(ValidationError {
+                code: "spt.empty_blows".into(),
+                message: "No blows provided for SPTExp.".into(),
+            });
+        }
+        for blow in &self.blows {
+            blow.validate(fields)?;
+        }
+        Ok(())
+    }
 }
 
 // -------------------------------------------------------------------------------------------
@@ -285,10 +369,10 @@ impl SPTExp {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SPT {
     pub exps: Vec<SPTExp>,
-    pub energy_correction_factor: f64,
-    pub diameter_correction_factor: f64,
-    pub sampler_correction_factor: f64,
-    pub rod_length_correction_factor: f64,
+    pub energy_correction_factor: Option<f64>,
+    pub diameter_correction_factor: Option<f64>,
+    pub sampler_correction_factor: Option<f64>,
+    pub rod_length_correction_factor: Option<f64>,
     pub idealization_method: SelectionMethod,
 }
 impl SPT {
@@ -309,10 +393,10 @@ impl SPT {
     ) -> Self {
         Self {
             exps: Vec::new(),
-            energy_correction_factor,
-            diameter_correction_factor,
-            sampler_correction_factor,
-            rod_length_correction_factor,
+            energy_correction_factor: Some(energy_correction_factor),
+            diameter_correction_factor: Some(diameter_correction_factor),
+            sampler_correction_factor: Some(sampler_correction_factor),
+            rod_length_correction_factor: Some(rod_length_correction_factor),
             idealization_method,
         }
     }
@@ -357,7 +441,7 @@ impl SPT {
         for exp in &self.exps {
             for blow in &exp.blows {
                 depth_map
-                    .entry(OrderedFloat(blow.depth))
+                    .entry(OrderedFloat(blow.depth.unwrap()))
                     .or_default()
                     .push(blow.n.unwrap());
             }
@@ -383,7 +467,7 @@ impl SPT {
 
             // Add to new SPTExp
             idealized_blows.push(SPTBlow {
-                depth: depth.into_inner(),
+                depth: Some(depth.into_inner()),
                 n1: Some(NValue::Value(0)), // Placeholder (could be refined if needed)
                 n2: Some(NValue::Value(0)),
                 n3: Some(NValue::Value(0)),
@@ -393,5 +477,52 @@ impl SPT {
         }
 
         SPTExp::new(idealized_blows, name)
+    }
+    /// Validates specific fields of the SPT using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.exps.is_empty() {
+            return Err(ValidationError {
+                code: "spt.empty_exps".into(),
+                message: "No experiments provided for SPT.".into(),
+            });
+        }
+        for exp in &self.exps {
+            exp.validate(fields)?;
+        }
+        validate_field(
+            "energy_correction_factor",
+            self.energy_correction_factor,
+            Some(0.001),
+            None,
+            "spt",
+        )?;
+        validate_field(
+            "rod_length_correction_factor",
+            self.rod_length_correction_factor,
+            Some(0.001),
+            None,
+            "spt",
+        )?;
+        validate_field(
+            "diameter_correction_factor",
+            self.diameter_correction_factor,
+            Some(0.001),
+            None,
+            "spt",
+        )?;
+        validate_field(
+            "sampler_correction_factor",
+            self.sampler_correction_factor,
+            Some(0.001),
+            None,
+            "spt",
+        )?;
+        Ok(())
     }
 }

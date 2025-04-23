@@ -5,13 +5,14 @@ use soilrust::{
     models::spt::{NValue, SPTBlow, SPTExp, SPT},
 };
 
-fn create_blow(depth: f64, n: i32) -> SPTBlow {
+fn create_blow(depth: f64, n3: i32) -> SPTBlow {
     SPTBlow {
-        depth,
-        n: if n == 50 {
+        depth: Some(depth),
+        n2: Some(NValue::from_i32(1)),
+        n3: if n3 == 50 {
             Some(NValue::Refusal)
         } else {
-            Some(NValue::from_i32(n))
+            Some(NValue::from_i32(n3 - 1))
         },
         ..Default::default()
     }
@@ -29,15 +30,15 @@ fn test_case_1() {
         ], // total depth = 15
     };
     let mut spt = SPT {
-        energy_correction_factor: 1.0,
-        diameter_correction_factor: 1.0,
-        sampler_correction_factor: 1.0,
-        rod_length_correction_factor: 1.0,
+        energy_correction_factor: Some(1.0),
+        diameter_correction_factor: Some(1.0),
+        sampler_correction_factor: Some(1.0),
+        rod_length_correction_factor: Some(1.0),
         idealization_method: SelectionMethod::Min,
         exps: vec![exp.clone()],
     };
 
-    let result = calc_lsc_by_spt(&mut spt);
+    let result = calc_lsc_by_spt(&mut spt).unwrap();
     assert_eq!(result.layers.len(), 3);
     assert_abs_diff_eq!(result.n_30, 13.84, epsilon = 1e-2); // harmonic average
     assert_eq!(result.soil_class, "ZE");
@@ -55,15 +56,15 @@ fn test_case_2() {
         ],
     };
     let mut spt = SPT {
-        energy_correction_factor: 1.0,
-        diameter_correction_factor: 1.0,
-        sampler_correction_factor: 1.0,
-        rod_length_correction_factor: 1.0,
+        energy_correction_factor: Some(1.0),
+        diameter_correction_factor: Some(1.0),
+        sampler_correction_factor: Some(1.0),
+        rod_length_correction_factor: Some(1.0),
         idealization_method: SelectionMethod::Min,
         exps: vec![exp.clone()],
     };
 
-    let result = calc_lsc_by_spt(&mut spt);
+    let result = calc_lsc_by_spt(&mut spt).unwrap();
 
     assert_eq!(result.layers.len(), 3);
     assert_eq!(result.n_30, 25.);
@@ -82,15 +83,15 @@ fn test_case_3() {
         ],
     };
     let mut spt = SPT {
-        energy_correction_factor: 1.0,
-        diameter_correction_factor: 1.0,
-        sampler_correction_factor: 1.0,
-        rod_length_correction_factor: 1.0,
+        energy_correction_factor: Some(1.0),
+        diameter_correction_factor: Some(1.0),
+        sampler_correction_factor: Some(1.0),
+        rod_length_correction_factor: Some(1.0),
         idealization_method: SelectionMethod::Min,
         exps: vec![exp.clone()],
     };
 
-    let result = calc_lsc_by_spt(&mut spt);
+    let result = calc_lsc_by_spt(&mut spt).unwrap();
 
     assert_eq!(result.layers.len(), 3);
     assert_abs_diff_eq!(result.n_30, 17.14, epsilon = 1e-2); // harmonic average

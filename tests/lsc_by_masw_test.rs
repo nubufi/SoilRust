@@ -7,9 +7,9 @@ use soilrust::{
 
 fn create_layer(thickness: f64, vs: f64) -> MaswLayer {
     MaswLayer {
-        thickness,
-        vs,
-        vp: 0.0,
+        thickness: Some(thickness),
+        vs: Some(vs),
+        vp: Some(0.0),
         depth: None,
     }
 }
@@ -27,7 +27,7 @@ fn test_case_1() {
         idealization_method: SelectionMethod::Min,
     };
 
-    let result = calc_lsc_by_vs(&mut masw);
+    let result = calc_lsc_by_vs(&mut masw).unwrap();
     assert_eq!(result.layers.len(), 2);
     assert_abs_diff_eq!(result.vs_30, 1285.71, epsilon = 1e-2); // harmonic average
     assert_eq!(result.soil_class, "ZB"); // low vs_30 leads to ZB
@@ -50,7 +50,7 @@ fn test_case_2() {
         idealization_method: SelectionMethod::Min,
     };
 
-    let result = calc_lsc_by_vs(&mut masw);
+    let result = calc_lsc_by_vs(&mut masw).unwrap();
 
     assert_eq!(result.layers.len(), 2);
     assert_eq!(result.vs_30, 3000.);
@@ -74,7 +74,7 @@ fn test_case_3() {
         idealization_method: SelectionMethod::Min,
     };
 
-    let result = calc_lsc_by_vs(&mut masw);
+    let result = calc_lsc_by_vs(&mut masw).unwrap();
 
     assert_eq!(result.layers.len(), 3);
     assert_abs_diff_eq!(result.vs_30, 1714.28, epsilon = 1e-2); // harmonic average

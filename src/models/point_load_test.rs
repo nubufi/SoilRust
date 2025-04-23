@@ -3,7 +3,10 @@ use std::collections::BTreeMap;
 
 use ordered_float::OrderedFloat;
 
-use crate::enums::SelectionMethod;
+use crate::{
+    enums::SelectionMethod,
+    validation::{validate_field, ValidationError},
+};
 
 /// Represents an individual Point Load Test sample for determining rock strength.
 ///
@@ -18,28 +21,63 @@ use crate::enums::SelectionMethod;
 /// * `d` - Equivalent core diameter in millimeters (mm).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PointLoadSample {
-    pub depth: f64,
+    pub depth: Option<f64>,
     pub sample_no: Option<u32>,
     pub p: Option<f64>,
     pub is: Option<f64>,
     pub f: Option<f64>,
-    pub is50: f64,
+    pub is50: Option<f64>,
     pub l: Option<f64>,
-    pub d: f64,
+    pub d: Option<f64>,
 }
 
 impl PointLoadSample {
     pub fn new(depth: f64, is50: f64, d: f64) -> Self {
         Self {
-            depth,
+            depth: Some(depth),
             sample_no: None,
             p: None,
             is: None,
             f: None,
-            is50,
+            is50: Some(is50),
             l: None,
-            d,
+            d: Some(d),
         }
+    }
+    /// Validates specific fields of the PointLoadSample using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        for &field in fields {
+            let result = match field {
+                "depth" => validate_field("depth", self.depth, Some(0.0), None, "point_load_test"),
+                "sample_no" => validate_field(
+                    "sample_no",
+                    self.sample_no,
+                    Some(0),
+                    None,
+                    "point_load_test",
+                ),
+                "p" => validate_field("p", self.p, Some(0.0001), None, "point_load_test"),
+                "is" => validate_field("is", self.is, Some(0.00001), None, "point_load_test"),
+                "f" => validate_field("f", self.f, Some(0.00001), None, "point_load_test"),
+                "is50" => validate_field("is50", self.is50, Some(0.00001), None, "point_load_test"),
+                "l" => validate_field("l", self.l, Some(0.00001), None, "point_load_test"),
+                "d" => validate_field("d", self.d, Some(0.00001), None, "point_load_test"),
+                unknown => Err(ValidationError {
+                    code: "point_load_test.invalid_field".into(),
+                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                }),
+            };
+
+            result?; // propagate error if any field fails
+        }
+
+        Ok(())
     }
 }
 
@@ -81,8 +119,29 @@ impl PointLoadExp {
     pub fn get_sample_at_depth(&self, depth: f64) -> &PointLoadSample {
         self.samples
             .iter()
-            .find(|exp| exp.depth >= depth)
+            .find(|exp| exp.depth.unwrap() >= depth)
             .unwrap_or_else(|| self.samples.last().unwrap())
+    }
+
+    /// Validates specific fields of the PointLoadExp using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.samples.is_empty() {
+            return Err(ValidationError {
+                code: "point_load_test.empty_samples".into(),
+                message: "No samples provided for Point Load Experiment.".into(),
+            });
+        }
+        for sample in &self.samples {
+            sample.validate(fields)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -133,9 +192,12 @@ impl PointLoadTest {
         for exp in &self.exps {
             for sample in &exp.samples {
                 depth_map
-                    .entry(OrderedFloat(sample.depth))
+                    .entry(OrderedFloat(sample.depth.unwrap()))
                     .or_default()
-                    .push((OrderedFloat(sample.is50), OrderedFloat(sample.d)));
+                    .push((
+                        OrderedFloat(sample.is50.unwrap()),
+                        OrderedFloat(sample.d.unwrap()),
+                    ));
             }
         }
 
@@ -164,5 +226,25 @@ impl PointLoadTest {
         }
 
         PointLoadExp::new(name, idealized_samples)
+    }
+    /// Validates specific fields of the PointLoadTest using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.exps.is_empty() {
+            return Err(ValidationError {
+                code: "point_load_test.empty_exps".into(),
+                message: "No experiments provided for Point Load Test.".into(),
+            });
+        }
+        for exp in &self.exps {
+            exp.validate(fields)?;
+        }
+
+        Ok(())
     }
 }

@@ -4,11 +4,12 @@ use std::f64::consts::PI;
 use crate::{
     enums::AnalysisTerm,
     models::{foundation::Foundation, loads::Loads, soil_profile::SoilProfile},
+    validation::ValidationError,
 };
 
 use super::{helper_functions::get_soil_params, model::*};
 
-/// Validates the input data for bearing capacity calculations.
+/// Validates the input data for vesics bearing capacity calculations.
 ///
 /// # Arguments
 /// * `soil_profile` - The soil profile data.
@@ -18,73 +19,49 @@ use super::{helper_functions::get_soil_params, model::*};
 ///
 /// # Returns
 /// * `Result<(), &'static str>`: Ok if valid, Err with a message if invalid.
-fn validate_input(
+pub fn validate_input(
     soil_profile: &SoilProfile,
     foundation: &Foundation,
     loading: &Loads,
     term: AnalysisTerm,
-) -> Result<(), &'static str> {
-    if foundation.effective_width.is_none() || foundation.effective_length.is_none() {
-        return Err("Foundation width and length must be provided.");
-    }
+) -> Result<(), ValidationError> {
+    soil_profile.validate(&["thickness", "dry_unit_weight", "saturated_unit_weight"])?;
+    foundation.validate(&["foundation_depth", "foundation_width", "foundation_length"])?;
+    loading.validate(&["vertical_load"])?;
 
-    if loading.vertical_load.is_none() {
-        return Err("Vertical load must be provided.");
-    }
-
-    if soil_profile.layers.is_empty() {
-        return Err("Soil profile must contain at least one layer.");
-    }
-
-    if soil_profile.layers.last().unwrap().depth.unwrap() < foundation.foundation_depth {
-        return Err("Foundation depth exceeds soil profile depth.");
+    if soil_profile.layers.last().unwrap().depth.unwrap() < foundation.foundation_depth.unwrap() {
+        return Err(ValidationError {
+            code: "foundation.foundation_depth.smaller_than_soil_profile_depth".to_string(),
+            message: "Foundation depth is smaller than the soil profile depth.".to_string(),
+        });
     }
 
     for layer in soil_profile.layers.iter() {
-        if layer.dry_unit_weight.is_none() {
-            return Err("Dry unit weight must be provided for all soil layers.");
-        }
-
-        if layer.saturated_unit_weight.is_none() {
-            return Err("Saturated unit weight must be provided for all soil layers.");
-        }
         match term {
             AnalysisTerm::Short => {
-                if layer.cu.is_none() {
-                    return Err(
-                        "Undrained cohesion (cu) must be provided for short-term analysis.",
-                    );
-                }
-                if layer.phi_u.is_none() {
-                    return Err("Undrained friction angle (phi_u) must be provided for short-term analysis.");
-                }
-                if layer.phi_u.unwrap() < 0.0 {
-                    return Err("Undrained friction angle (phi_u) must be non-negative.");
-                }
-                if layer.cu.unwrap() < 0.0 {
-                    return Err("Undrained cohesion (cu) must be non-negative.");
-                }
+                let fields_to_validate = ["cu", "phi_u"];
+                layer.validate_fields(&fields_to_validate).unwrap();
+
                 if layer.cu.unwrap() == 0. && layer.phi_u.unwrap() == 0. {
-                    return Err("Either undrained cohesion (cu) or undrained friction angle (phi_u) must be greater than zero.");
+                    return Err(
+                        ValidationError{
+                            code: "soil_profile.layer.cu_or_phi_u_zero".to_string(),
+                            message: "Either undrained shear strength (cu) or undrained friction angle (phi_u) must be greater than zero.".to_string(),
+                        }
+                    );
                 }
             }
             AnalysisTerm::Long => {
-                if layer.c_prime.is_none() {
-                    return Err("Effective cohesion (c') must be provided for long-term analysis.");
-                }
-                if layer.phi_prime.is_none() {
-                    return Err(
-                        "Effective friction angle (phi') must be provided for long-term analysis.",
-                    );
-                }
-                if layer.phi_prime.unwrap() < 0.0 {
-                    return Err("Effective friction angle (phi') must be non-negative.");
-                }
-                if layer.c_prime.unwrap() < 0.0 {
-                    return Err("Effective cohesion (c') must be non-negative.");
-                }
+                let fields_to_validate = ["c_prime", "phi_prime"];
+                layer.validate_fields(&fields_to_validate).unwrap();
+
                 if layer.c_prime.unwrap() == 0. && layer.phi_prime.unwrap() == 0. {
-                    return Err("Either effective cohesion (c') or effective friction angle (phi') must be greater than zero.");
+                    return Err(
+                        ValidationError{
+                            code: "soil_profile.layer.c_prime_or_phi_prime_zero".to_string(),
+                            message: "Either effective cohesion (c') or effective friction angle (phi') must be greater than zero.".to_string(),
+                        }
+                    );
                 }
             }
         }
@@ -130,8 +107,8 @@ pub fn calc_shape_factors(
     bearing_capacity_factors: BearingCapacityFactors,
     phi: f64,
 ) -> ShapeFactors {
-    let width = foundation.foundation_width;
-    let length = foundation.foundation_length;
+    let width = foundation.foundation_width.unwrap();
+    let length = foundation.foundation_length.unwrap();
     let w_l = width / length;
 
     let nc = bearing_capacity_factors.nc;
@@ -201,8 +178,8 @@ pub fn calc_inclination_factors(
     foundation: &Foundation,
     loading: &Loads,
 ) -> InclinationFactors {
-    let w = foundation.foundation_width;
-    let l = foundation.foundation_length;
+    let w = foundation.foundation_width.unwrap();
+    let l = foundation.foundation_length.unwrap();
 
     let vertical_load = loading.vertical_load.unwrap();
     let hb = loading.horizontal_load_x.unwrap_or(0.);
@@ -257,8 +234,8 @@ pub fn calc_inclination_factors(
 /// # Returns
 /// * `DepthFactors`: dc, dq, dg coefficients
 pub fn calc_depth_factors(foundation: &Foundation, phi: f64) -> DepthFactors {
-    let df = foundation.foundation_depth;
-    let w = foundation.foundation_width;
+    let df = foundation.foundation_depth.unwrap();
+    let w = foundation.foundation_width.unwrap();
 
     let db = if df / w <= 1.0 {
         df / w
@@ -316,21 +293,21 @@ pub fn calc_ground_factors(iq: f64, slope_angle: f64, phi: f64) -> GroundFactors
 /// # Returns
 /// * `BearingCapacityResult` with detailed components and safety check.
 pub fn calc_bearing_capacity(
-    soil_profile: &SoilProfile,
+    soil_profile: &mut SoilProfile,
     foundation: &mut Foundation,
     loading: &Loads,
     foundation_pressure: f64,
     factor_of_safety: f64,
     term: AnalysisTerm,
-) -> BearingCapacityResult {
+) -> Result<BearingCapacityResult, ValidationError> {
+    // Validate input data
+    validate_input(soil_profile, foundation, loading, term)?;
+    soil_profile.calc_layer_depths();
     // Calculate effective foundation dimensions
     foundation.calc_effective_lengths(
         loading.moment_x.unwrap_or(0.),
         loading.moment_y.unwrap_or(0.),
     );
-
-    // Validate input data
-    validate_input(soil_profile, foundation, loading, term).unwrap();
 
     let soil_params = get_soil_params(soil_profile, foundation, term);
     let phi = soil_params.friction_angle;
@@ -392,7 +369,7 @@ pub fn calc_bearing_capacity(
 
     let is_safe = foundation_pressure <= q_allow;
 
-    BearingCapacityResult {
+    Ok(BearingCapacityResult {
         bearing_capacity_factors,
         shape_factors,
         depth_factors,
@@ -403,5 +380,5 @@ pub fn calc_bearing_capacity(
         is_safe,
         ground_factors,
         base_factors,
-    }
+    })
 }

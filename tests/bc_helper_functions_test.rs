@@ -8,9 +8,9 @@ use soilrust::models::soil_profile::{SoilLayer, SoilProfile};
 #[test]
 fn test_compute_equivalent_unit_weights_1() {
     let profile = SoilProfile {
-        ground_water_level: 0.,
+        ground_water_level: Some(0.),
         layers: vec![SoilLayer {
-            thickness: 5.0,
+            thickness: Some(5.0),
             dry_unit_weight: Some(1.8),
             saturated_unit_weight: Some(2.0),
             depth: Some(5.0),
@@ -26,17 +26,17 @@ fn test_compute_equivalent_unit_weights_1() {
 #[test]
 fn test_compute_equivalent_unit_weights_2() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.7),
                 saturated_unit_weight: Some(1.9),
                 depth: Some(3.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 2.0,
+                thickness: Some(2.0),
                 dry_unit_weight: Some(1.9),
                 saturated_unit_weight: Some(2.1),
                 depth: Some(5.0),
@@ -53,24 +53,24 @@ fn test_compute_equivalent_unit_weights_2() {
 #[test]
 fn test_compute_equivalent_unit_weights_3() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![
             SoilLayer {
-                thickness: 2.0,
+                thickness: Some(2.0),
                 dry_unit_weight: Some(1.6),
                 saturated_unit_weight: Some(1.8),
                 depth: Some(2.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.8),
                 saturated_unit_weight: Some(2.0),
                 depth: Some(5.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 4.0,
+                thickness: Some(4.0),
                 dry_unit_weight: Some(2.0),
                 saturated_unit_weight: Some(2.2),
                 depth: Some(9.0),
@@ -87,17 +87,17 @@ fn test_compute_equivalent_unit_weights_3() {
 #[test]
 fn test_compute_equivalent_unit_weights_4() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.7),
                 saturated_unit_weight: Some(1.9),
                 depth: Some(3.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 2.0,
+                thickness: Some(2.0),
                 dry_unit_weight: Some(1.8),
                 saturated_unit_weight: Some(2.0),
                 depth: Some(5.0),
@@ -114,17 +114,17 @@ fn test_compute_equivalent_unit_weights_4() {
 #[test]
 fn test_compute_equivalent_unit_weights_5() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.7),
                 saturated_unit_weight: Some(1.9),
                 depth: Some(3.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.8),
                 saturated_unit_weight: Some(2.0),
                 depth: Some(6.0),
@@ -141,17 +141,17 @@ fn test_compute_equivalent_unit_weights_5() {
 #[test]
 fn test_compute_equivalent_unit_weights_6() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.7),
                 saturated_unit_weight: Some(1.9),
                 depth: Some(3.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.8),
                 saturated_unit_weight: Some(2.0),
                 depth: Some(6.0),
@@ -168,9 +168,9 @@ fn test_compute_equivalent_unit_weights_6() {
 #[test]
 fn test_calc_effective_surcharge_1() {
     let profile = SoilProfile {
-        ground_water_level: 10.0,
+        ground_water_level: Some(10.0),
         layers: vec![SoilLayer {
-            thickness: 5.0,
+            thickness: Some(5.0),
             dry_unit_weight: Some(1.8),
             saturated_unit_weight: Some(2.0),
             depth: Some(5.0),
@@ -178,7 +178,7 @@ fn test_calc_effective_surcharge_1() {
         }],
     };
     let building = Foundation {
-        foundation_depth: 3.0,
+        foundation_depth: Some(3.0),
         effective_width: Some(2.0),
         ..Default::default()
     };
@@ -194,9 +194,9 @@ fn test_calc_effective_surcharge_1() {
 #[test]
 fn test_calc_effective_surcharge_2() {
     let profile = SoilProfile {
-        ground_water_level: 2.0,
+        ground_water_level: Some(2.0),
         layers: vec![SoilLayer {
-            thickness: 5.0,
+            thickness: Some(5.0),
             dry_unit_weight: Some(1.8),
             saturated_unit_weight: Some(2.0),
             depth: Some(5.0),
@@ -204,7 +204,7 @@ fn test_calc_effective_surcharge_2() {
         }],
     };
     let building = Foundation {
-        foundation_depth: 5.0,
+        foundation_depth: Some(5.0),
         effective_width: Some(2.0),
         ..Default::default()
     };
@@ -220,9 +220,9 @@ fn test_calc_effective_surcharge_2() {
 #[test]
 fn test_calc_effective_surcharge_3() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![SoilLayer {
-            thickness: 5.0,
+            thickness: Some(5.0),
             dry_unit_weight: Some(1.8),
             saturated_unit_weight: Some(2.0),
             depth: Some(5.0),
@@ -230,7 +230,7 @@ fn test_calc_effective_surcharge_3() {
         }],
     };
     let building = Foundation {
-        foundation_depth: 7.0,
+        foundation_depth: Some(7.0),
         effective_width: Some(3.0),
         ..Default::default()
     };
@@ -246,9 +246,9 @@ fn test_calc_effective_surcharge_3() {
 #[test]
 fn test_calc_effective_surcharge_4() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![SoilLayer {
-            thickness: 5.0,
+            thickness: Some(5.0),
             dry_unit_weight: Some(1.8),
             saturated_unit_weight: Some(2.0),
             depth: Some(5.0),
@@ -256,7 +256,7 @@ fn test_calc_effective_surcharge_4() {
         }],
     };
     let building = Foundation {
-        foundation_depth: 7.0,
+        foundation_depth: Some(7.0),
         effective_width: Some(3.0),
         ..Default::default()
     };
@@ -272,9 +272,9 @@ fn test_calc_effective_surcharge_4() {
 #[test]
 fn test_calc_effective_unit_weight_1() {
     let profile = SoilProfile {
-        ground_water_level: 2.0,
+        ground_water_level: Some(2.0),
         layers: vec![SoilLayer {
-            thickness: 5.0,
+            thickness: Some(5.0),
             dry_unit_weight: Some(1.8),
             saturated_unit_weight: Some(2.0),
             depth: Some(5.0),
@@ -283,7 +283,7 @@ fn test_calc_effective_unit_weight_1() {
     };
 
     let foundation = Foundation {
-        foundation_depth: 5.0,
+        foundation_depth: Some(5.0),
         effective_width: Some(2.0),
         ..Default::default()
     };
@@ -300,9 +300,9 @@ fn test_calc_effective_unit_weight_1() {
 #[test]
 fn test_calc_effective_unit_weight_2() {
     let profile = SoilProfile {
-        ground_water_level: 6.0,
+        ground_water_level: Some(6.0),
         layers: vec![SoilLayer {
-            thickness: 4.0,
+            thickness: Some(4.0),
             dry_unit_weight: Some(1.7),
             saturated_unit_weight: Some(2.1),
             depth: Some(4.0),
@@ -311,7 +311,7 @@ fn test_calc_effective_unit_weight_2() {
     };
 
     let foundation = Foundation {
-        foundation_depth: 5.0,
+        foundation_depth: Some(5.0),
         effective_width: Some(2.0),
         ..Default::default()
     };
@@ -328,9 +328,9 @@ fn test_calc_effective_unit_weight_2() {
 #[test]
 fn test_calc_effective_unit_weight_3() {
     let profile = SoilProfile {
-        ground_water_level: 10.0,
+        ground_water_level: Some(10.0),
         layers: vec![SoilLayer {
-            thickness: 4.0,
+            thickness: Some(4.0),
             dry_unit_weight: Some(1.9),
             saturated_unit_weight: Some(2.3),
             depth: Some(4.0),
@@ -339,7 +339,7 @@ fn test_calc_effective_unit_weight_3() {
     };
 
     let foundation = Foundation {
-        foundation_depth: 6.0,
+        foundation_depth: Some(6.0),
         effective_width: Some(2.0),
         ..Default::default()
     };
@@ -352,9 +352,9 @@ fn test_calc_effective_unit_weight_3() {
 #[test]
 fn test_calc_effective_unit_weight_4() {
     let profile = SoilProfile {
-        ground_water_level: 3.0,
+        ground_water_level: Some(3.0),
         layers: vec![SoilLayer {
-            thickness: 4.0,
+            thickness: Some(4.0),
             dry_unit_weight: Some(1.7),
             saturated_unit_weight: Some(2.1),
             depth: Some(4.0),
@@ -363,7 +363,7 @@ fn test_calc_effective_unit_weight_4() {
     };
 
     let foundation = Foundation {
-        foundation_depth: 6.0,
+        foundation_depth: Some(6.0),
         effective_width: Some(2.0),
         ..Default::default()
     };
@@ -376,9 +376,9 @@ fn test_calc_effective_unit_weight_4() {
 #[test]
 fn test_get_soil_params_1() {
     let profile = SoilProfile {
-        ground_water_level: 2.0,
+        ground_water_level: Some(2.0),
         layers: vec![SoilLayer {
-            thickness: 5.0,
+            thickness: Some(5.0),
             depth: Some(5.0),
             cu: Some(25.0),
             phi_u: Some(20.0),
@@ -391,7 +391,7 @@ fn test_get_soil_params_1() {
     };
 
     let foundation = Foundation {
-        foundation_depth: 3.0,
+        foundation_depth: Some(3.0),
         effective_width: Some(2.0),
         ..Default::default()
     };
@@ -411,9 +411,9 @@ fn test_get_soil_params_1() {
 #[test]
 fn test_get_soil_params_2() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![SoilLayer {
-            thickness: 4.0,
+            thickness: Some(4.0),
             depth: Some(4.0),
             cu: Some(18.0),
             phi_u: Some(25.0),
@@ -426,7 +426,7 @@ fn test_get_soil_params_2() {
     };
 
     let foundation = Foundation {
-        foundation_depth: 3.5,
+        foundation_depth: Some(3.5),
         effective_width: Some(2.0),
         ..Default::default()
     };

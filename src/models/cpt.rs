@@ -1,4 +1,7 @@
-use crate::enums::SelectionMethod;
+use crate::{
+    enums::SelectionMethod,
+    validation::{validate_field, ValidationError},
+};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -8,19 +11,19 @@ use std::collections::BTreeSet;
 /// Each `CPTLayer` instance holds a `depth` value (in meters) and a `cone_resistance` value (in MPa).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CPTLayer {
-    pub depth: f64,                  // Depth in meters
-    pub cone_resistance: f64,        // Cone resistance (qc) in MPa
-    pub sleeve_friction: f64,        // Sleeve friction (fs) in MPa
-    pub pore_pressure: Option<f64>,  // Pore pressure (u2) in MPa
-    pub friction_ratio: Option<f64>, // Friction ratio (Rf) in percentage
+    pub depth: Option<f64>,           // Depth in meters
+    pub cone_resistance: Option<f64>, // Cone resistance (qc) in MPa
+    pub sleeve_friction: Option<f64>, // Sleeve friction (fs) in MPa
+    pub pore_pressure: Option<f64>,   // Pore pressure (u2) in MPa
+    pub friction_ratio: Option<f64>,  // Friction ratio (Rf) in percentage
 }
 
 impl Default for CPTLayer {
     fn default() -> Self {
         Self {
-            depth: 0.0,
-            cone_resistance: 0.0,
-            sleeve_friction: 0.0,
+            depth: Some(0.0),
+            cone_resistance: Some(0.0),
+            sleeve_friction: Some(0.0),
             pore_pressure: None,
             friction_ratio: None,
         }
@@ -34,9 +37,9 @@ impl CPTLayer {
     /// * `cone_resistance` - The cone resistance of the CPT data point in MPa.
     pub fn new(depth: f64, qc: f64, fs: f64, u2: Option<f64>) -> Self {
         Self {
-            depth,
-            cone_resistance: qc,
-            sleeve_friction: fs,
+            depth: Some(depth),
+            cone_resistance: Some(qc),
+            sleeve_friction: Some(fs),
             pore_pressure: u2,
             friction_ratio: None,
         }
@@ -57,9 +60,57 @@ impl CPTLayer {
     /// - `fs` is the sleeve friction in MPa.
     /// - `qc` is the cone resistance in MPa.
     pub fn calc_friction_ratio(&mut self) {
-        if self.cone_resistance != 0.0 {
-            self.friction_ratio = Some((self.sleeve_friction / self.cone_resistance) * 100.0);
+        if self.cone_resistance.unwrap() != 0.0 {
+            self.friction_ratio =
+                Some((self.sleeve_friction.unwrap() / self.cone_resistance.unwrap()) * 100.0);
         }
+    }
+
+    /// Validates specific fields of the CPTLayer using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        for &field in fields {
+            let result = match field {
+                "depth" => validate_field("depth", self.depth, Some(0.0), None, "cpt"),
+                "cone_resistance" => validate_field(
+                    "cone_resistance",
+                    self.cone_resistance,
+                    Some(0.0),
+                    None,
+                    "cpt",
+                ),
+                "sleeve_friction" => validate_field(
+                    "sleeve_friction",
+                    self.sleeve_friction,
+                    Some(0.0),
+                    None,
+                    "cpt",
+                ),
+                "pore_pressure" => {
+                    validate_field("pore_pressure", self.pore_pressure, Some(0.0), None, "cpt")
+                }
+                "friction_ratio" => validate_field(
+                    "friction_ratio",
+                    self.friction_ratio,
+                    Some(0.0),
+                    None,
+                    "cpt",
+                ),
+                unknown => Err(ValidationError {
+                    code: "cpt.invalid_field".into(),
+                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                }),
+            };
+
+            result?; // propagate error if any field fails
+        }
+
+        Ok(())
     }
 }
 // ------------------------------------------------------------------------------------------------
@@ -104,8 +155,29 @@ impl CPTExp {
     pub fn get_layer_at_depth(&self, depth: f64) -> &CPTLayer {
         self.layers
             .iter()
-            .find(|exp| exp.depth >= depth)
+            .find(|exp| exp.depth.unwrap() >= depth)
             .unwrap_or_else(|| self.layers.last().unwrap())
+    }
+
+    /// Validates specific fields of the CPTExp using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.layers.is_empty() {
+            return Err(ValidationError {
+                code: "cpt.empty_layers".into(),
+                message: "No layers provided for CPTExp.".into(),
+            });
+        }
+        for layer in &self.layers {
+            layer.validate(fields)?;
+        }
+
+        Ok(())
     }
 }
 // ------------------------------------------------------------------------------------------------
@@ -159,7 +231,7 @@ impl CPT {
         let mut unique_depths = BTreeSet::new();
         for exp in &self.exps {
             for layer in &exp.layers {
-                unique_depths.insert(OrderedFloat(layer.depth));
+                unique_depths.insert(OrderedFloat(layer.depth.unwrap()));
             }
         }
 
@@ -181,8 +253,8 @@ impl CPT {
 
             for exp in &self.exps {
                 let layer = exp.get_layer_at_depth(depth);
-                qc_at_depth.push(layer.cone_resistance);
-                fs_at_depth.push(layer.sleeve_friction);
+                qc_at_depth.push(layer.cone_resistance.unwrap());
+                fs_at_depth.push(layer.sleeve_friction.unwrap());
                 u2_at_depth.push(layer.pore_pressure.unwrap_or(0.0));
             }
 
@@ -194,5 +266,26 @@ impl CPT {
         }
 
         CPTExp::new(layers, name)
+    }
+
+    /// Validates specific fields of the CPT using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.exps.is_empty() {
+            return Err(ValidationError {
+                code: "cpt.empty_exps".into(),
+                message: "No experiments found in CPT.".into(),
+            });
+        }
+        for exp in &self.exps {
+            exp.validate(fields)?;
+        }
+
+        Ok(())
     }
 }

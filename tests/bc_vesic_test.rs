@@ -41,9 +41,9 @@ fn test_calc_bearing_capacity_factors_3() {
 #[test]
 fn test_calc_shape_factors_1() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
-        foundation_length: 1.5,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
+        foundation_length: Some(1.5),
         ..Foundation::default()
     };
     let phi = 0.0;
@@ -64,9 +64,9 @@ fn test_calc_shape_factors_1() {
 #[test]
 fn test_calc_shape_factors_2() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
-        foundation_length: 1.5,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
+        foundation_length: Some(1.5),
         ..Foundation::default()
     };
     let phi = 30.0;
@@ -87,9 +87,9 @@ fn test_calc_shape_factors_2() {
 #[test]
 fn test_calc_inclination_factors_1() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 4.0,
-        foundation_length: 6.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(4.0),
+        foundation_length: Some(6.0),
         effective_width: Some(1.0),
         effective_length: Some(1.5),
         ..Default::default()
@@ -119,9 +119,9 @@ fn test_calc_inclination_factors_1() {
 #[test]
 fn test_calc_inclination_factors_2() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
-        foundation_length: 1.5,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
+        foundation_length: Some(1.5),
         effective_width: Some(1.0),
         effective_length: Some(1.5),
         ..Default::default()
@@ -150,9 +150,9 @@ fn test_calc_inclination_factors_2() {
 #[test]
 fn test_calc_inclination_factors_3() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
-        foundation_length: 1.5,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
+        foundation_length: Some(1.5),
         effective_width: Some(1.0),
         effective_length: Some(1.5),
         ..Default::default()
@@ -181,9 +181,9 @@ fn test_calc_inclination_factors_3() {
 #[test]
 fn test_calc_inclination_factors_4() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
-        foundation_length: 1.5,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
+        foundation_length: Some(1.5),
         effective_width: Some(1.0),
         effective_length: Some(1.5),
         ..Default::default()
@@ -212,9 +212,9 @@ fn test_calc_inclination_factors_4() {
 #[test]
 fn test_calc_inclination_factors_5() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
-        foundation_length: 1.5,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
+        foundation_length: Some(1.5),
         effective_width: Some(1.0),
         effective_length: Some(1.5),
         ..Default::default()
@@ -244,8 +244,8 @@ fn test_calc_inclination_factors_5() {
 #[test]
 fn test_calc_depth_factors_1() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
         ..Default::default()
     };
 
@@ -259,8 +259,8 @@ fn test_calc_depth_factors_1() {
 #[test]
 fn test_calc_depth_factors_2() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 1.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(1.0),
         ..Default::default()
     };
 
@@ -274,8 +274,8 @@ fn test_calc_depth_factors_2() {
 #[test]
 fn test_calc_depth_factors_3() {
     let foundation = Foundation {
-        foundation_depth: 2.0,
-        foundation_width: 1.0,
+        foundation_depth: Some(2.0),
+        foundation_width: Some(1.0),
         ..Default::default()
     };
 
@@ -289,8 +289,8 @@ fn test_calc_depth_factors_3() {
 #[test]
 fn test_calc_depth_factors_4() {
     let foundation = Foundation {
-        foundation_depth: 2.0,
-        foundation_width: 1.0,
+        foundation_depth: Some(2.0),
+        foundation_width: Some(1.0),
         ..Default::default()
     };
 
@@ -305,9 +305,9 @@ fn test_calc_depth_factors_4() {
 #[test]
 fn test_calc_base_factors_1() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(2.0),
+        foundation_length: Some(2.0),
         base_tilt_angle: Some(0.0),
         slope_angle: Some(0.0),
         ..Default::default()
@@ -323,9 +323,9 @@ fn test_calc_base_factors_1() {
 #[test]
 fn test_calc_base_factors_2() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(2.0),
+        foundation_length: Some(2.0),
         base_tilt_angle: Some(0.0),
         slope_angle: Some(0.0),
         ..Default::default()
@@ -341,9 +341,9 @@ fn test_calc_base_factors_2() {
 #[test]
 fn test_calc_base_factors_3() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(2.0),
+        foundation_length: Some(2.0),
         base_tilt_angle: Some(0.0),
         slope_angle: Some(10.0),
         ..Default::default()
@@ -359,9 +359,9 @@ fn test_calc_base_factors_3() {
 #[test]
 fn test_calc_base_factors_4() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(2.0),
+        foundation_length: Some(2.0),
         base_tilt_angle: Some(10.0),
         slope_angle: Some(0.0),
         ..Default::default()
@@ -377,9 +377,9 @@ fn test_calc_base_factors_4() {
 #[test]
 fn test_calc_base_factors_5() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(2.0),
+        foundation_length: Some(2.0),
         base_tilt_angle: Some(10.0),
         slope_angle: Some(10.0),
         ..Default::default()
@@ -395,9 +395,9 @@ fn test_calc_base_factors_5() {
 #[test]
 fn test_calc_base_factors_6() {
     let foundation = Foundation {
-        foundation_depth: 1.0,
-        foundation_width: 2.0,
-        foundation_length: 2.0,
+        foundation_depth: Some(1.0),
+        foundation_width: Some(2.0),
+        foundation_length: Some(2.0),
         base_tilt_angle: Some(10.0),
         slope_angle: Some(10.0),
         ..Default::default()

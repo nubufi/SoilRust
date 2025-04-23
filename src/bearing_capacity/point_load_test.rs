@@ -1,6 +1,9 @@
 use serde::Serialize;
 
-use crate::models::point_load_test::{PointLoadExp, PointLoadTest};
+use crate::{
+    models::{foundation::Foundation, point_load_test::PointLoadTest},
+    validation::{validate_field, ValidationError},
+};
 
 /// Represents the bearing capacity result for a given soil and foundation setup.
 #[derive(Debug, Serialize)]
@@ -33,24 +36,28 @@ pub struct Output {
     pub safety_factor: f64,
 }
 
-fn validate(
-    point_load_test_exp: PointLoadExp,
-    df: f64,
+pub fn validate_input(
+    point_load_test: &PointLoadTest,
+    foundation: &Foundation,
     foundation_pressure: f64,
     safety_factor: f64,
-) -> Result<(), String> {
-    if df < 0.0 {
-        return Err("Depth (df) must be non-negative.".to_string());
-    }
-    if foundation_pressure <= 0.0 {
-        return Err("Foundation pressure must be positive.".to_string());
-    }
-    if safety_factor <= 0.0 {
-        return Err("Safety factor must be positive.".to_string());
-    }
-    if point_load_test_exp.samples.is_empty() {
-        return Err("Point load test experiment data is empty.".to_string());
-    }
+) -> Result<(), ValidationError> {
+    point_load_test.validate(&["is50", "d"])?;
+    foundation.validate(&["foundation_depth"])?;
+    validate_field(
+        "foundation_pressure",
+        Some(foundation_pressure),
+        Some(0.0),
+        None,
+        "loads",
+    )?;
+    validate_field(
+        "safety_factor",
+        Some(safety_factor),
+        Some(1.),
+        None,
+        "safety_factor",
+    )?;
     Ok(())
 }
 /// Calculates the generalized size correction factor `C` based on the given equivalent core diameter `D`.
@@ -106,24 +113,23 @@ pub fn get_generalized_c_value(d: f64) -> f64 {
 /// * `Output` - The bearing capacity result containing various parameters.
 pub fn calc_bearing_capacity(
     point_load_test: PointLoadTest,
-    df: f64,
+    foundation: Foundation,
     foundation_pressure: f64,
     safety_factor: f64,
-) -> Output {
-    let point_load_test_exp = point_load_test.get_idealized_exp("idealized".to_string());
-    // Validate inputs
-    validate(
-        point_load_test_exp.clone(),
-        df,
+) -> Result<Output, ValidationError> {
+    validate_input(
+        &point_load_test,
+        &foundation,
         foundation_pressure,
         safety_factor,
-    )
-    .unwrap();
+    )?;
+    let df = foundation.foundation_depth.unwrap();
+    let point_load_test_exp = point_load_test.get_idealized_exp("idealized".to_string());
     const MPA_TO_TON: f64 = 101.97162; // Conversion factor from MPa to ton/m2
     let sample = point_load_test_exp.get_sample_at_depth(df);
 
-    let is50 = sample.is50;
-    let d = sample.d;
+    let is50 = sample.is50.unwrap();
+    let d = sample.d.unwrap();
     let c = get_generalized_c_value(d);
 
     let ucs = is50 * c;
@@ -131,7 +137,7 @@ pub fn calc_bearing_capacity(
     let allowable_bearing_capacity = MPA_TO_TON * ucs / safety_factor;
     let is_safe = allowable_bearing_capacity >= foundation_pressure;
 
-    Output {
+    Ok(Output {
         is50,
         ucs,
         c,
@@ -141,5 +147,5 @@ pub fn calc_bearing_capacity(
         safety_factor,
         foundation_pressure,
         df,
-    }
+    })
 }

@@ -6,7 +6,7 @@ use soilrust::{
 
 fn create_layer(thickness: f64, cu: f64) -> SoilLayer {
     SoilLayer {
-        thickness,
+        thickness: Some(thickness),
         cu: Some(cu),
         ..Default::default()
     }
@@ -16,11 +16,11 @@ fn create_layer(thickness: f64, cu: f64) -> SoilLayer {
 #[test]
 fn test_case_1() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![create_layer(5.0, 10.0), create_layer(10.0, 15.0)], // total depth = 15
     };
 
-    let result = calc_lsc_by_cu(&mut profile.clone());
+    let result = calc_lsc_by_cu(&mut profile.clone()).unwrap();
     assert_eq!(result.layers.len(), 2);
     assert_abs_diff_eq!(result.cu_30, 12.86, epsilon = 1e-2); // harmonic average
     assert_eq!(result.soil_class, "ZD"); // low cu_30 leads to ZD
@@ -30,7 +30,7 @@ fn test_case_1() {
 #[test]
 fn test_case_2() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![
             create_layer(10.0, 15.0),
             create_layer(10.0, 0.0), // should be skipped
@@ -38,7 +38,7 @@ fn test_case_2() {
         ],
     };
 
-    let result = calc_lsc_by_cu(&mut profile.clone());
+    let result = calc_lsc_by_cu(&mut profile.clone()).unwrap();
 
     assert_eq!(result.layers.len(), 2);
     assert_eq!(result.cu_30, 30.);
@@ -49,7 +49,7 @@ fn test_case_2() {
 #[test]
 fn test_case_3() {
     let profile = SoilProfile {
-        ground_water_level: 0.0,
+        ground_water_level: Some(0.0),
         layers: vec![
             create_layer(10.0, 10.0),
             create_layer(10.0, 20.0),
@@ -57,7 +57,7 @@ fn test_case_3() {
         ],
     };
 
-    let result = calc_lsc_by_cu(&mut profile.clone());
+    let result = calc_lsc_by_cu(&mut profile.clone()).unwrap();
 
     assert_eq!(result.layers.len(), 3);
     assert_abs_diff_eq!(result.cu_30, 17.14, epsilon = 1e-2); // harmonic average

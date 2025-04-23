@@ -82,7 +82,7 @@ fn test_sptblow_new() {
         NValue::from_i32(15),
     );
 
-    assert_eq!(spt.depth, 10.0);
+    assert_eq!(spt.depth, Some(10.0));
     assert_eq!(spt.n1, Some(NValue::from_i32(5)));
     assert_eq!(spt.n2, Some(NValue::from_i32(10)));
     assert_eq!(spt.n3, Some(NValue::from_i32(15)));
@@ -156,13 +156,13 @@ fn test_apply_corrections() {
 
     let soil_profile = SoilProfile {
         layers: vec![soil_profile::SoilLayer {
-            thickness: 10.0,
+            thickness: Some(10.0),
             dry_unit_weight: Some(1.8),
             saturated_unit_weight: Some(2.0),
             fine_content: Some(10.0),
             ..Default::default()
         }],
-        ground_water_level: 5.0,
+        ground_water_level: Some(5.0),
     };
     let cr = 1.1;
     let cs = 0.9;
@@ -217,17 +217,17 @@ fn test_get_idealized_exp() {
     assert_eq!(idealized_exp_avg.blows.len(), 3);
     assert_eq!(idealized_exp_max.blows.len(), 3);
 
-    assert_eq!(idealized_exp_min.blows[0].depth, 1.5);
-    assert_eq!(idealized_exp_min.blows[1].depth, 2.0);
-    assert_eq!(idealized_exp_min.blows[2].depth, 3.0);
+    assert_eq!(idealized_exp_min.blows[0].depth.unwrap(), 1.5);
+    assert_eq!(idealized_exp_min.blows[1].depth.unwrap(), 2.0);
+    assert_eq!(idealized_exp_min.blows[2].depth.unwrap(), 3.0);
 
-    assert_eq!(idealized_exp_avg.blows[0].depth, 1.5);
-    assert_eq!(idealized_exp_avg.blows[1].depth, 2.0);
-    assert_eq!(idealized_exp_avg.blows[2].depth, 3.0);
+    assert_eq!(idealized_exp_avg.blows[0].depth.unwrap(), 1.5);
+    assert_eq!(idealized_exp_avg.blows[1].depth.unwrap(), 2.0);
+    assert_eq!(idealized_exp_avg.blows[2].depth.unwrap(), 3.0);
 
-    assert_eq!(idealized_exp_max.blows[0].depth, 1.5);
-    assert_eq!(idealized_exp_max.blows[1].depth, 2.0);
-    assert_eq!(idealized_exp_max.blows[2].depth, 3.0);
+    assert_eq!(idealized_exp_max.blows[0].depth.unwrap(), 1.5);
+    assert_eq!(idealized_exp_max.blows[1].depth.unwrap(), 2.0);
+    assert_eq!(idealized_exp_max.blows[2].depth.unwrap(), 3.0);
 
     assert_eq!(idealized_exp_min.blows[0].n, Some(NValue::Value(10)));
     assert_eq!(idealized_exp_min.blows[1].n, Some(NValue::Value(20)));

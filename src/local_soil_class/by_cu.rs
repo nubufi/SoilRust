@@ -1,4 +1,4 @@
-use crate::models::soil_profile::SoilProfile;
+use crate::{models::soil_profile::SoilProfile, validation::ValidationError};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,6 +23,18 @@ pub struct CuSoilClassificationResult {
     pub soil_class: String,
 }
 
+/// Validates the input data for local soil classification calculations.
+///
+/// # Arguments
+/// * `soil_profile` - The soil profile data.
+///
+/// # Returns
+/// * `Result<(), ValidationError>`: Ok if valid, Err if invalid.
+pub fn validate_input(soil_profile: &SoilProfile) -> Result<(), ValidationError> {
+    soil_profile.validate(&["thickness", "cu"])?;
+
+    Ok(())
+}
 /// Calculates (cu)_30 based on the harmonic average over the top 30m of the profile.
 pub fn compute_cu_30(profile: &SoilProfile) -> Vec<CuLayerData> {
     let mut remaining_depth = 30.0;
@@ -33,7 +45,7 @@ pub fn compute_cu_30(profile: &SoilProfile) -> Vec<CuLayerData> {
             break;
         }
 
-        let thickness = layer.thickness.min(remaining_depth);
+        let thickness = layer.thickness.unwrap().min(remaining_depth);
         let cu = layer.cu.unwrap_or(0.0);
 
         if cu <= 0.0 {
@@ -63,7 +75,11 @@ pub fn compute_cu_30(profile: &SoilProfile) -> Vec<CuLayerData> {
 /// # Returns
 ///
 /// A `CuSoilClassificationResult` object containing the calculated local soil class and other related data.
-pub fn calc_lsc_by_cu(soil_profile: &mut SoilProfile) -> CuSoilClassificationResult {
+pub fn calc_lsc_by_cu(
+    soil_profile: &mut SoilProfile,
+) -> Result<CuSoilClassificationResult, ValidationError> {
+    validate_input(soil_profile)?;
+
     soil_profile.calc_layer_depths();
     let cu_layers = compute_cu_30(soil_profile);
 
@@ -84,10 +100,10 @@ pub fn calc_lsc_by_cu(soil_profile: &mut SoilProfile) -> CuSoilClassificationRes
     }
     .to_string();
 
-    CuSoilClassificationResult {
+    Ok(CuSoilClassificationResult {
         layers: cu_layers,
         sum_h_over_cu,
         cu_30,
         soil_class,
-    }
+    })
 }

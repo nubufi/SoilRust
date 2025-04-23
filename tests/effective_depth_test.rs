@@ -9,24 +9,24 @@ use soilrust::{
 
 fn create_soil_profile() -> SoilProfile {
     SoilProfile {
-        ground_water_level: 5.,
+        ground_water_level: Some(5.),
         layers: vec![
             SoilLayer {
-                thickness: 3.0,
+                thickness: Some(3.0),
                 dry_unit_weight: Some(1.8),
                 saturated_unit_weight: Some(1.9),
                 depth: Some(3.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 5.0,
+                thickness: Some(5.0),
                 dry_unit_weight: Some(1.9),
                 saturated_unit_weight: Some(2.),
                 depth: Some(8.0),
                 ..Default::default()
             },
             SoilLayer {
-                thickness: 50.0,
+                thickness: Some(50.0),
                 dry_unit_weight: Some(2.),
                 saturated_unit_weight: Some(2.1),
                 depth: Some(58.0),
@@ -37,9 +37,9 @@ fn create_soil_profile() -> SoilProfile {
 }
 fn create_foundation_data() -> Foundation {
     Foundation {
-        foundation_width: 10.0,
-        foundation_length: 20.0,
-        foundation_depth: 2.0,
+        foundation_width: Some(10.0),
+        foundation_length: Some(20.0),
+        foundation_depth: Some(2.0),
         ..Default::default()
     }
 }
@@ -51,7 +51,7 @@ fn test_effective_depth() {
     let foundation_pressure = 50.;
 
     let effective_depth =
-        calc_effective_depth(&soil_profile, &foundation_data, foundation_pressure);
+        calc_effective_depth(&soil_profile, &foundation_data, foundation_pressure).unwrap();
     let expected_depth = 34.41;
     assert_abs_diff_eq!(effective_depth, expected_depth, epsilon = 1e-2);
 }

@@ -14,24 +14,24 @@ pub fn get_center_and_thickness(
     df: f64,
     layer_index: usize,
 ) -> (f64, f64) {
-    let gwt = soil_profile.ground_water_level;
+    let gwt = soil_profile.ground_water_level.unwrap();
     let gwt_layer_index = soil_profile.get_layer_index(gwt);
     let df_layer_index = soil_profile.get_layer_index(df);
     let layer = &soil_profile.layers[layer_index];
 
     let (center, thickness) = if gwt_layer_index < layer_index {
         if layer_index == df_layer_index {
-            let thickness = layer.thickness - df;
+            let thickness = layer.thickness.unwrap() - df;
             let center = df + thickness / 2.0;
             (center, thickness)
         } else {
-            let thickness = layer.thickness;
+            let thickness = layer.thickness.unwrap();
             let center = layer.center.expect("Layer center must be Some");
             (center, thickness)
         }
     } else {
         let max_depth = df.max(gwt);
-        let thickness = layer.thickness - max_depth;
+        let thickness = layer.thickness.unwrap() - max_depth;
         let center = max_depth + thickness / 2.0;
         (center, thickness)
     };

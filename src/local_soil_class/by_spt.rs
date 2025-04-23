@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::spt::{SPTExp, SPT};
+use crate::{
+    models::spt::{SPTExp, SPT},
+    validation::ValidationError,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NLayerData {
@@ -24,11 +27,30 @@ pub struct SptSoilClassificationResult {
     pub soil_class: String,
 }
 
+/// Validates the soil profile and SPT data
+///
+/// # Arguments
+/// * `spt` - SPT data
+///
+/// # Returns
+/// * `Result` - Ok if validation passes, Err if validation fails
+pub fn validate_input(spt: &SPT) -> Result<(), ValidationError> {
+    spt.validate(&["n2", "n3", "depth"])?;
+
+    Ok(())
+}
+/// Prepares the SPTExp object by calculating all N values and applying energy correction
+///
+/// # Arguments
+/// * `spt` - A mutable reference to a `SPT` object containing the SPT data.
+///
+/// # Returns
+/// * `SPTExp` - The prepared SPTExp object with calculated N values and applied corrections.
 fn prepare_spt_exp(spt: &mut SPT) -> SPTExp {
     spt.calc_all_n();
 
     let mut spt_exp = spt.get_idealized_exp("idealized".to_string());
-    spt_exp.apply_energy_correction(spt.energy_correction_factor);
+    spt_exp.apply_energy_correction(spt.energy_correction_factor.unwrap());
 
     spt_exp
 }
@@ -44,9 +66,13 @@ pub fn compute_n_30(spt_exp: &SPTExp) -> Vec<NLayerData> {
             break;
         }
 
-        let previous_depth = if i == 0 { 0.0 } else { blows[i - 1].depth };
+        let previous_depth = if i == 0 {
+            0.0
+        } else {
+            blows[i - 1].depth.unwrap()
+        };
 
-        let thickness = (blow.depth - previous_depth).min(remaining_depth);
+        let thickness = (blow.depth.unwrap() - previous_depth).min(remaining_depth);
 
         if thickness <= 0.0 {
             continue; // Skip invalid thickness
@@ -82,14 +108,16 @@ pub fn compute_n_30(spt_exp: &SPTExp) -> Vec<NLayerData> {
 /// # Returns
 ///
 /// A `SptSoilClassificationResult` object containing the calculated local soil class and other related data.
-pub fn calc_lsc_by_spt(spt: &mut SPT) -> SptSoilClassificationResult {
+pub fn calc_lsc_by_spt(spt: &mut SPT) -> Result<SptSoilClassificationResult, ValidationError> {
+    validate_input(spt)?;
+
     let spt_exp = prepare_spt_exp(spt);
 
     let n_layers = compute_n_30(&spt_exp);
 
     let sum_h_over_n: f64 = n_layers.iter().map(|l| l.h_over_n).sum();
 
-    let depth = spt_exp.blows.last().unwrap().depth.min(30.);
+    let depth = spt_exp.blows.last().unwrap().depth.unwrap().min(30.);
 
     let n_30 = if sum_h_over_n > 0.0 {
         depth / sum_h_over_n
@@ -104,10 +132,10 @@ pub fn calc_lsc_by_spt(spt: &mut SPT) -> SptSoilClassificationResult {
     }
     .to_string();
 
-    SptSoilClassificationResult {
+    Ok(SptSoilClassificationResult {
         layers: n_layers,
         sum_h_over_n,
         n_30,
         soil_class,
-    }
+    })
 }

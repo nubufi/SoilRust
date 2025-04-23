@@ -1,4 +1,7 @@
-use crate::enums::SelectionMethod;
+use crate::{
+    enums::SelectionMethod,
+    validation::{validate_field, ValidationError},
+};
 use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -13,20 +16,47 @@ use std::collections::BTreeSet;
 /// * `depth` - The depth of the layer in meters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaswLayer {
-    pub thickness: f64,
-    pub vs: f64,
-    pub vp: f64,
+    pub thickness: Option<f64>,
+    pub vs: Option<f64>,
+    pub vp: Option<f64>,
     pub depth: Option<f64>,
 }
 
 impl MaswLayer {
     pub fn new(thickness: f64, vs: f64, vp: f64) -> Self {
         Self {
-            thickness,
-            vs,
-            vp,
+            thickness: Some(thickness),
+            vs: Some(vs),
+            vp: Some(vp),
             depth: None,
         }
+    }
+    /// Validates specific fields of the MaswLayer using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        for &field in fields {
+            let result = match field {
+                "depth" => validate_field("depth", self.depth, Some(0.0), None, "masw"),
+                "thickness" => {
+                    validate_field("thickness", self.thickness, Some(0.0001), None, "masw")
+                }
+                "vs" => validate_field("vs", self.vs, Some(0.0), None, "masw"),
+                "vp" => validate_field("vp", self.vp, Some(0.0), None, "masw"),
+                unknown => Err(ValidationError {
+                    code: "masw.invalid_field".into(),
+                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                }),
+            };
+
+            result?; // propagate error if any field fails
+        }
+
+        Ok(())
     }
 }
 
@@ -66,12 +96,13 @@ impl MaswExp {
         let mut bottom = 0.0;
 
         for exp in &mut self.layers {
-            if exp.thickness <= 0.0 {
+            let thickness = exp.thickness.unwrap();
+            if thickness <= 0.0 {
                 panic!("Thickness of MASW experiment must be greater than zero.");
             }
 
-            exp.depth = Some(bottom + exp.thickness);
-            bottom += exp.thickness;
+            exp.depth = Some(bottom + thickness);
+            bottom += thickness;
         }
     }
 
@@ -92,6 +123,26 @@ impl MaswExp {
             .iter()
             .find(|exp| exp.depth.unwrap() >= depth)
             .unwrap_or_else(|| self.layers.last().unwrap())
+    }
+
+    /// Validates specific fields of the MaswExp using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.layers.is_empty() {
+            return Err(ValidationError {
+                code: "masw.empty_layers".into(),
+                message: "No layers provided for MaswExp.".into(),
+            });
+        }
+        for layer in &self.layers {
+            layer.validate(fields)?;
+        }
+        Ok(())
     }
 }
 
@@ -186,8 +237,8 @@ impl Masw {
 
             for exp in &self.exps {
                 let layer = exp.get_layer_at_depth((top + bottom) / 2.0);
-                vs_at_depth.push(layer.vs);
-                vp_at_depth.push(layer.vp);
+                vs_at_depth.push(layer.vs.unwrap());
+                vp_at_depth.push(layer.vp.unwrap());
             }
 
             let vs = get_mode_value(mode, vs_at_depth);
@@ -197,5 +248,24 @@ impl Masw {
         }
 
         MaswExp::new(layers, name)
+    }
+    /// Validates specific fields of the Masw using field names.
+    ///
+    /// # Arguments
+    /// * `fields` - A slice of field names to validate.
+    ///
+    /// # Returns
+    /// Ok(()) if all fields are valid, or an error if any field is invalid.
+    pub fn validate(&self, fields: &[&str]) -> Result<(), ValidationError> {
+        if self.exps.is_empty() {
+            return Err(ValidationError {
+                code: "masw.empty_exps".into(),
+                message: "No experiments provided for Masw.".into(),
+            });
+        }
+        for exp in &self.exps {
+            exp.validate(fields)?;
+        }
+        Ok(())
     }
 }

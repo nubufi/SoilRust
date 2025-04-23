@@ -44,10 +44,10 @@ fn test_get_layer_at_depth() {
     let masw_exp = MaswExp::new(layers, "Test".to_string());
 
     let layer = masw_exp.get_layer_at_depth(4.0);
-    assert_eq!(layer.vs, 2.0); // The second layer should be returned
+    assert_eq!(layer.vs.unwrap(), 2.0); // The second layer should be returned
 
     let layer = masw_exp.get_layer_at_depth(15.0);
-    assert_eq!(layer.vs, 3.0);
+    assert_eq!(layer.vs.unwrap(), 3.0);
 }
 
 fn create_test_maws() -> Masw {
@@ -93,9 +93,9 @@ fn test_get_idealized_exp_min_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert_eq!(layer1.thickness, 1.5);
-    assert_eq!(layer1.vs, 160.0);
-    assert_eq!(layer1.vp, 390.0);
+    assert_eq!(layer1.thickness.unwrap(), 1.5);
+    assert_eq!(layer1.vs.unwrap(), 160.0);
+    assert_eq!(layer1.vp.unwrap(), 390.0);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
@@ -118,9 +118,9 @@ fn test_get_idealized_exp_avg_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert_eq!(layer1.thickness, 1.5);
-    assert_eq!(layer1.vs, 170.0);
-    assert_eq!(layer1.vp, 395.0);
+    assert_eq!(layer1.thickness.unwrap(), 1.5);
+    assert_eq!(layer1.vs.unwrap(), 170.0);
+    assert_eq!(layer1.vp.unwrap(), 395.0);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
@@ -143,9 +143,9 @@ fn test_get_idealized_exp_max_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert_eq!(layer1.thickness, 1.5);
-    assert_eq!(layer1.vs, 180.0);
-    assert_eq!(layer1.vp, 400.0);
+    assert_eq!(layer1.thickness.unwrap(), 1.5);
+    assert_eq!(layer1.vs.unwrap(), 180.0);
+    assert_eq!(layer1.vp.unwrap(), 400.0);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();

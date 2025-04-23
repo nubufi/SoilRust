@@ -8,45 +8,36 @@ use crate::{
         soil_profile::SoilProfile,
         spt::{SPTExp, SPT},
     },
+    validation::ValidationError,
 };
 
 /// Validates the soil profile and SPT data
-fn validate(soil_profile: &SoilProfile, spt: &SPTExp) -> Result<(), String> {
-    if spt.blows.is_empty() {
-        return Err("No SPT data provided.".to_string());
-    }
-    for blow in &spt.blows {
-        if blow.n1_60.is_none() || blow.n1_60f.is_none() {
-            return Err("N1_60 and N1_60f values are required.".to_string());
-        }
-        if blow.thickness.is_none() {
-            return Err("Layer thickness is required.".to_string());
-        }
-    }
-    if soil_profile.layers.is_empty() {
-        return Err("No soil profile data provided.".to_string());
-    }
-    for layer in &soil_profile.layers {
-        if layer.plasticity_index.is_none() {
-            return Err("Plasticity index is required.".to_string());
-        }
-        if layer.dry_unit_weight.is_none() {
-            return Err("Drainage condition is required.".to_string());
-        }
-        if layer.saturated_unit_weight.is_none() {
-            return Err("Saturated unit weight is required.".to_string());
-        }
-    }
+///
+/// # Arguments
+/// * `soil_profile` - Soil profile data
+/// * `spt` - SPT data
+///
+/// # Returns
+/// * `Result` - Ok if validation passes, Err if validation fails
+pub fn validate_input(soil_profile: &SoilProfile, spt: &SPT) -> Result<(), ValidationError> {
+    spt.validate(&["n2", "n3", "depth"])?;
+    soil_profile.validate(&[
+        "thickness",
+        "dry_unit_weight",
+        "saturated_unit_weight",
+        "plasticity_index",
+        "fine_content",
+    ])?;
 
     Ok(())
 }
 
 fn prepare_spt_exp(spt: &mut SPT, soil_profile: &SoilProfile) -> SPTExp {
     spt.calc_all_n();
-    let cr = spt.rod_length_correction_factor;
-    let cs = spt.sampler_correction_factor;
-    let cb = spt.diameter_correction_factor;
-    let ce = spt.energy_correction_factor;
+    let cr = spt.rod_length_correction_factor.unwrap();
+    let cs = spt.sampler_correction_factor.unwrap();
+    let cb = spt.diameter_correction_factor.unwrap();
+    let ce = spt.energy_correction_factor.unwrap();
 
     let mut spt_exp = spt.get_idealized_exp("idealized".to_string());
     spt_exp.apply_corrections(soil_profile, cr, cs, cb, ce);
@@ -125,17 +116,17 @@ pub fn calc_liquefacion(
     spt: &mut SPT,
     pga: f64,
     mw: f64,
-) -> LiquefactionResult {
-    let spt_exp = prepare_spt_exp(spt, soil_profile);
+) -> Result<LiquefactionResult, ValidationError> {
+    validate_input(soil_profile, &spt)?;
 
-    validate(soil_profile, &spt_exp).unwrap();
+    let spt_exp = prepare_spt_exp(spt, soil_profile);
 
     let msf = calc_msf(mw);
     let mut layer_results = Vec::new();
 
     for blow in spt_exp.blows.iter() {
         let thickness = blow.thickness.unwrap();
-        let depth = blow.depth;
+        let depth = blow.depth.unwrap();
         let rd = calc_rd(depth);
         let n60 = blow.n60.unwrap().to_i32();
         let n1_60 = blow.n1_60.unwrap().to_i32();
@@ -146,7 +137,7 @@ pub fn calc_liquefacion(
         let plasticity_index = soil_layer.plasticity_index.unwrap();
 
         let conditions = [
-            soil_profile.ground_water_level >= depth,
+            soil_profile.ground_water_level.unwrap() >= depth,
             plasticity_index >= 12.,
             n1_60 >= 30,
             n1_60_f >= 34,
@@ -191,9 +182,9 @@ pub fn calc_liquefacion(
         // Add the layer result to the liquefaction result
     }
     let total_settlement = layer_results.iter().map(|x| x.settlement).sum();
-    LiquefactionResult {
+    Ok(LiquefactionResult {
         layers: layer_results,
         total_settlement,
         msf,
-    }
+    })
 }

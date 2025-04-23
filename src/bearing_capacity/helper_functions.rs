@@ -18,7 +18,7 @@ pub fn compute_equivalent_unit_weights(profile: &SoilProfile, depth_limit: f64) 
         let thickness = if layer.depth.unwrap() >= depth_limit {
             depth_limit - prev_depth
         } else {
-            layer.thickness
+            layer.thickness.unwrap()
         };
 
         gamma_dry_sum += layer.dry_unit_weight.unwrap() * thickness;
@@ -48,14 +48,14 @@ pub fn calc_effective_surcharge(
     foundation_data: &Foundation,
     term: AnalysisTerm,
 ) -> f64 {
-    let df = foundation_data.foundation_depth;
+    let df = foundation_data.foundation_depth.unwrap();
     let width = foundation_data.effective_width.unwrap();
 
     let (gamma_dry, gamma_saturated) = compute_equivalent_unit_weights(soil_profile, df);
     let gamma_effective = gamma_saturated - 0.981; // γ_w assumed as 0.981 tf/m³ (≈ 9.81 kN/m³)
 
     let gwt = match term {
-        AnalysisTerm::Short => soil_profile.ground_water_level,
+        AnalysisTerm::Short => soil_profile.ground_water_level.unwrap(),
         AnalysisTerm::Long => df + width,
     };
 
@@ -81,14 +81,14 @@ pub fn calc_effective_unit_weight(
     foundation: &Foundation,
     term: AnalysisTerm,
 ) -> f64 {
-    let df = foundation.foundation_depth;
+    let df = foundation.foundation_depth.unwrap();
     let width = foundation.effective_width.unwrap();
 
     let (gamma_dry, gamma_saturated) = compute_equivalent_unit_weights(soil_profile, df);
     let gamma_effective = gamma_saturated - 0.981; // Subtract unit weight of water (kN/m³)
 
     let gwt = match term {
-        AnalysisTerm::Short => soil_profile.ground_water_level,
+        AnalysisTerm::Short => soil_profile.ground_water_level.unwrap(),
         AnalysisTerm::Long => df + width,
     };
 
@@ -123,7 +123,7 @@ pub fn get_soil_params(
     foundation: &Foundation,
     term: AnalysisTerm,
 ) -> SoilParams {
-    let depth = foundation.foundation_depth;
+    let depth = foundation.foundation_depth.unwrap();
     let layer = soil_profile.get_layer_at_depth(depth);
 
     let (friction_angle, cohesion) = match term {

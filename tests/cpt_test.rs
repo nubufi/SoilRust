@@ -32,7 +32,7 @@ fn test_get_layer_at_exact_depth() {
     let cpt = CPTExp::new(layers.clone(), "Test CPT".to_string());
 
     let layer = cpt.get_layer_at_depth(2.0);
-    assert_eq!(layer.depth, 2.0);
+    assert_eq!(layer.depth.unwrap(), 2.0);
 }
 
 #[test]
@@ -41,7 +41,7 @@ fn test_get_layer_at_intermediate_depth() {
     let cpt = CPTExp::new(layers.clone(), "Test CPT".to_string());
 
     let layer = cpt.get_layer_at_depth(2.5);
-    assert_eq!(layer.depth, 3.0);
+    assert_eq!(layer.depth.unwrap(), 3.0);
 }
 
 #[test]
@@ -50,7 +50,7 @@ fn test_get_layer_at_depth_exceeds_all_layers() {
     let cpt = CPTExp::new(layers.clone(), "Test CPT".to_string());
 
     let layer = cpt.get_layer_at_depth(5.0);
-    assert_eq!(layer.depth, 3.0); // last layer
+    assert_eq!(layer.depth.unwrap(), 3.0); // last layer
 }
 
 #[test]
@@ -97,13 +97,13 @@ fn test_get_idealized_exp_min_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert_abs_diff_eq!(layer1.depth, 1.5, epsilon = 1e-6);
-    assert_abs_diff_eq!(layer1.cone_resistance, 150., epsilon = 1e-6);
-    assert_abs_diff_eq!(layer1.sleeve_friction, 380., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.depth.unwrap(), 1.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.cone_resistance.unwrap(), 150., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.sleeve_friction.unwrap(), 380., epsilon = 1e-6);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert_abs_diff_eq!(last_layer.depth, 6.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(last_layer.depth.unwrap(), 6.5, epsilon = 1e-6);
 }
 
 #[test]
@@ -121,13 +121,13 @@ fn test_get_idealized_exp_avg_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert_abs_diff_eq!(layer1.depth, 1.5, epsilon = 1e-6);
-    assert_abs_diff_eq!(layer1.cone_resistance, 155., epsilon = 1e-6);
-    assert_abs_diff_eq!(layer1.sleeve_friction, 385., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.depth.unwrap(), 1.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.cone_resistance.unwrap(), 155., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.sleeve_friction.unwrap(), 385., epsilon = 1e-6);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert_abs_diff_eq!(last_layer.depth, 6.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(last_layer.depth.unwrap(), 6.5, epsilon = 1e-6);
 }
 
 #[test]
@@ -146,11 +146,11 @@ fn test_get_idealized_exp_max_mode() {
 
     // Check first layer values
     let layer1 = &ideal.layers[0];
-    assert_abs_diff_eq!(layer1.depth, 1.5, epsilon = 1e-6);
-    assert_abs_diff_eq!(layer1.cone_resistance, 160., epsilon = 1e-6);
-    assert_abs_diff_eq!(layer1.sleeve_friction, 390., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.depth.unwrap(), 1.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.cone_resistance.unwrap(), 160., epsilon = 1e-6);
+    assert_abs_diff_eq!(layer1.sleeve_friction.unwrap(), 390., epsilon = 1e-6);
 
     // Check last layer depth
     let last_layer = ideal.layers.last().unwrap();
-    assert_abs_diff_eq!(last_layer.depth, 6.5, epsilon = 1e-6);
+    assert_abs_diff_eq!(last_layer.depth.unwrap(), 6.5, epsilon = 1e-6);
 }

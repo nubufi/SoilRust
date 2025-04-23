@@ -37,21 +37,21 @@ fn test_calc_eccentricity_zero_load() {
 fn test_get_vertical_stress() {
     // Create a struct with known values
     let stress_data = Loads {
-        service_load: Stress {
+        service_load: Some(Stress {
             min: Some(10.0),
             avg: Some(15.0),
             max: Some(20.0),
-        },
-        ultimate_load: Stress {
+        }),
+        ultimate_load: Some(Stress {
             min: Some(25.0),
             avg: Some(30.0),
             max: Some(35.0),
-        },
-        seismic_load: Stress {
+        }),
+        seismic_load: Some(Stress {
             min: Some(40.0),
             avg: Some(45.0),
             max: None,
-        },
+        }),
         ..Default::default()
     };
 

@@ -3,8 +3,8 @@ use soilrust::models::foundation::Foundation;
 #[test]
 fn test_calc_effective_lengths() {
     let mut foundation = Foundation {
-        foundation_length: 10.0,
-        foundation_width: 5.0,
+        foundation_length: Some(10.0),
+        foundation_width: Some(5.0),
         ..Default::default()
     };
 
@@ -25,8 +25,8 @@ fn test_calc_effective_lengths() {
 #[test]
 fn test_calc_effective_lengths_zero_eccentricity() {
     let mut foundation = Foundation {
-        foundation_length: 8.0,
-        foundation_width: 4.0,
+        foundation_length: Some(8.0),
+        foundation_width: Some(4.0),
         ..Default::default()
     };
 
@@ -40,8 +40,8 @@ fn test_calc_effective_lengths_zero_eccentricity() {
 #[test]
 fn test_calc_effective_lengths_negative_effective_size() {
     let mut foundation = Foundation {
-        foundation_length: 6.0,
-        foundation_width: 3.0,
+        foundation_length: Some(6.0),
+        foundation_width: Some(3.0),
         ..Default::default()
     };
 

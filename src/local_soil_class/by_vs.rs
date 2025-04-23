@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::masw::{Masw, MaswExp};
+use crate::{
+    models::masw::{Masw, MaswExp},
+    validation::ValidationError,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VsLayerData {
@@ -24,6 +27,18 @@ pub struct VsSoilClassificationResult {
     pub soil_class: String,
 }
 
+/// Validates the input data for local soil class calculations.
+///
+/// # Arguments
+/// * `masw` - The MASW data.
+///
+/// # Returns
+/// * `Result<(), ValidationError>`: Ok if valid, Err if invalid.
+pub fn validate_input(masw: &Masw) -> Result<(), ValidationError> {
+    masw.validate(&["thickness", "vs"])?;
+
+    Ok(())
+}
 /// Calculates (vs)_30 based on the harmonic average over the top 30m of the profile.
 pub fn compute_vs_30(masw_exp: &MaswExp) -> Vec<VsLayerData> {
     let mut remaining_depth = 30.0;
@@ -34,8 +49,8 @@ pub fn compute_vs_30(masw_exp: &MaswExp) -> Vec<VsLayerData> {
             break;
         }
 
-        let thickness = layer.thickness.min(remaining_depth);
-        let vs = layer.vs;
+        let thickness = layer.thickness.unwrap().min(remaining_depth);
+        let vs = layer.vs.unwrap();
 
         if vs <= 0.0 {
             continue; // Skip layer with vs == 0
@@ -64,7 +79,8 @@ pub fn compute_vs_30(masw_exp: &MaswExp) -> Vec<VsLayerData> {
 /// # Returns
 ///
 /// A `VsSoilClassificationResult` object containing the calculated local soil class and other related data.
-pub fn calc_lsc_by_vs(masw: &mut Masw) -> VsSoilClassificationResult {
+pub fn calc_lsc_by_vs(masw: &mut Masw) -> Result<VsSoilClassificationResult, ValidationError> {
+    validate_input(masw)?;
     let mut masw_exp = masw.get_idealized_exp("idealized".to_string());
     masw_exp.calc_depths();
 
@@ -89,10 +105,10 @@ pub fn calc_lsc_by_vs(masw: &mut Masw) -> VsSoilClassificationResult {
     }
     .to_string();
 
-    VsSoilClassificationResult {
+    Ok(VsSoilClassificationResult {
         layers: vs_layers,
         sum_h_over_vs,
         vs_30,
         soil_class,
-    }
+    })
 }

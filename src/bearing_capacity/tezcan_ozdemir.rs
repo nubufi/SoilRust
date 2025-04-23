@@ -1,7 +1,6 @@
-use crate::models::{
-    foundation::Foundation,
-    masw::{Masw, MaswExp},
-    soil_profile::SoilProfile,
+use crate::{
+    models::{foundation::Foundation, masw::Masw, soil_profile::SoilProfile},
+    validation::ValidationError,
 };
 use serde::Serialize;
 
@@ -24,32 +23,24 @@ pub struct Output {
     pub safety_factor: f64,
 }
 
-fn validate_input(
-    masw_exp: &MaswExp,
+/// Validates the input data for Tezcan & Ozdemir bearing capacity calculations.
+///
+/// # Arguments
+/// * `masw` - The MASW data.
+/// * `soil_profile` - The soil profile data.
+/// * `foundation` - The foundation data.
+///
+/// # Returns
+/// * `Result<(), ValidationError>`: Ok if valid, Err if invalid.
+pub fn validate_input(
+    masw: &Masw,
     soil_profile: &SoilProfile,
     foundation: &Foundation,
-) -> Result<(), &'static str> {
-    if masw_exp.layers.is_empty() {
-        return Err("MASW experiment layers are empty.");
-    }
+) -> Result<(), ValidationError> {
+    masw.validate(&["thickness", "vs"])?;
+    soil_profile.validate(&["thickness", "dry_unit_weight", "saturated_unit_weight"])?;
+    foundation.validate(&["foundation_depth"])?;
 
-    if soil_profile.layers.is_empty() {
-        return Err("Soil profile is empty.");
-    }
-
-    if foundation.foundation_depth <= 0.0 {
-        return Err("Foundation depth must be greater than zero.");
-    }
-
-    for layer in soil_profile.layers.iter() {
-        if layer.dry_unit_weight.is_none() {
-            return Err("Dry unit weight must be provided for all soil layers.");
-        }
-
-        if layer.saturated_unit_weight.is_none() {
-            return Err("Saturated unit weight must be provided for all soil layers.");
-        }
-    }
     Ok(())
 }
 /// Retrieves the soil parameters (unit weight and shear wave velocity) at a given depth.
@@ -63,7 +54,7 @@ fn validate_input(
 fn get_unit_weight(df: f64, soil_profile: SoilProfile) -> f64 {
     let layer = soil_profile.get_layer_at_depth(df);
 
-    let gwt = soil_profile.ground_water_level;
+    let gwt = soil_profile.ground_water_level.unwrap();
 
     let mut unit_weight = layer.dry_unit_weight.unwrap();
 
@@ -91,14 +82,15 @@ pub fn calc_bearing_capacity(
     masw: &mut Masw,
     foundation: Foundation,
     foundation_pressure: f64,
-) -> Output {
-    let masw_exp = masw.get_idealized_exp("idealized".to_string());
+) -> Result<Output, ValidationError> {
     // Validate the input parameters
-    validate_input(&masw_exp, &soil_profile, &foundation).unwrap();
+    validate_input(masw, &soil_profile, &foundation)?;
 
-    let masw_layer = masw_exp.get_layer_at_depth(foundation.foundation_depth);
-    let vs = masw_layer.vs;
-    let df = foundation.foundation_depth;
+    let df = foundation.foundation_depth.unwrap();
+    let masw_exp = masw.get_idealized_exp("idealized".to_string());
+
+    let masw_layer = masw_exp.get_layer_at_depth(df);
+    let vs = masw_layer.vs.unwrap();
     let unit_weight = get_unit_weight(df, soil_profile);
 
     let (safety_factor, bearing_capacity): (f64, f64) = match vs {
@@ -119,11 +111,11 @@ pub fn calc_bearing_capacity(
         }
     };
 
-    Output {
+    Ok(Output {
         vs,
         unit_weight,
         allowable_bearing_capacity: bearing_capacity,
         is_safe: bearing_capacity >= foundation_pressure,
         safety_factor,
-    }
+    })
 }

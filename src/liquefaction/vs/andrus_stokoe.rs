@@ -4,31 +4,27 @@ use crate::{
         helper_functions::{calc_csr, calc_msf, calc_rd},
         models::{LiquefactionLayerResult, LiquefactionResult},
     },
-    models::{
-        masw::{Masw, MaswExp},
-        soil_profile::SoilProfile,
-    },
+    models::{masw::Masw, soil_profile::SoilProfile},
+    validation::ValidationError,
 };
 
-/// Validates the soil profile and MASW data
-fn validate(soil_profile: &SoilProfile, masw: &MaswExp) -> Result<(), String> {
-    if masw.layers.is_empty() {
-        return Err("No SPT data provided.".to_string());
-    }
-    if soil_profile.layers.is_empty() {
-        return Err("No soil profile data provided.".to_string());
-    }
-    for layer in &soil_profile.layers {
-        if layer.plasticity_index.is_none() {
-            return Err("Plasticity index is required.".to_string());
-        }
-        if layer.dry_unit_weight.is_none() {
-            return Err("Drainage condition is required.".to_string());
-        }
-        if layer.saturated_unit_weight.is_none() {
-            return Err("Saturated unit weight is required.".to_string());
-        }
-    }
+/// Validates the input data for liquefaction calculations.
+///
+/// # Arguments
+/// * `masw` - The MASW data.
+/// * `soil_profile` - The soil profile data.
+///
+/// # Returns
+/// * `Result<(), ValidationError>`: Ok if valid, Err if invalid.
+pub fn validate_input(masw: &Masw, soil_profile: &SoilProfile) -> Result<(), ValidationError> {
+    masw.validate(&["thickness", "vs"])?;
+    soil_profile.validate(&[
+        "thickness",
+        "dry_unit_weight",
+        "saturated_unit_weight",
+        "plasticity_index",
+        "fine_content",
+    ])?;
 
     Ok(())
 }
@@ -126,17 +122,17 @@ pub fn calc_liquefacion(
     masw: &mut Masw,
     pga: f64,
     mw: f64,
-) -> LiquefactionResult {
+) -> Result<LiquefactionResult, ValidationError> {
+    validate_input(masw, soil_profile)?;
+
     let mut masw_exp = masw.get_idealized_exp("idealized".to_string());
     masw_exp.calc_depths();
-
-    validate(soil_profile, &masw_exp).unwrap();
 
     let msf = calc_msf(mw);
     let mut layer_results = Vec::new();
 
     for layer in soil_profile.layers.iter() {
-        let thickness = layer.thickness;
+        let thickness = layer.thickness.unwrap();
         let depth = layer.depth.unwrap();
         let rd = calc_rd(depth);
         let effective_stress = soil_profile.calc_effective_stress(depth);
@@ -144,13 +140,13 @@ pub fn calc_liquefacion(
         let soil_layer = soil_profile.get_layer_at_depth(depth);
         let plasticity_index = soil_layer.plasticity_index.unwrap();
         let masw_layer = masw_exp.get_layer_at_depth(depth);
-        let vs = masw_layer.vs;
+        let vs = masw_layer.vs.unwrap();
         let cn = calc_cn(effective_stress);
         let vs1 = vs * cn;
         let vs1c = calc_vs1c(soil_layer.fine_content.unwrap());
 
         let conditions = [
-            soil_profile.ground_water_level >= depth,
+            soil_profile.ground_water_level.unwrap() >= depth,
             plasticity_index >= 12.,
             vs1 >= vs1c,
         ];
@@ -198,9 +194,9 @@ pub fn calc_liquefacion(
         // Add the layer result to the liquefaction result
     }
     let total_settlement = layer_results.iter().map(|x| x.settlement).sum();
-    LiquefactionResult {
+    Ok(LiquefactionResult {
         layers: layer_results,
         total_settlement,
         msf,
-    }
+    })
 }

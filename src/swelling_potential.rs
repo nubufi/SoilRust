@@ -1,4 +1,7 @@
-use crate::models::{foundation::Foundation, soil_profile::SoilProfile};
+use crate::{
+    models::{foundation::Foundation, soil_profile::SoilProfile},
+    validation::{validate_field, ValidationError},
+};
 use serde::{Deserialize, Serialize};
 
 /// Represents the swelling potential data for a soil layer.
@@ -24,52 +27,38 @@ pub struct SwellingPotentialResult {
     pub net_foundation_pressure: f64,
 }
 
-fn validate(soil_profile: &SoilProfile, foundation: &Foundation) -> Result<(), String> {
-    if foundation.foundation_depth <= 0.0 {
-        return Err("Foundation depth must be greater than zero.".to_string());
-    }
-    if foundation.foundation_width <= 0.0 {
-        return Err("Foundation width must be greater than zero.".to_string());
-    }
-    if foundation.foundation_length <= 0.0 {
-        return Err("Foundation length must be greater than zero.".to_string());
-    }
-    if soil_profile.ground_water_level < 0.0 {
-        return Err("Groundwater level must be greater than or equal to zero.".to_string());
-    }
-    if soil_profile.layers.is_empty() {
-        return Err("Soil profile must contain at least one layer.".to_string());
-    }
+/// Validates the input data for swelling potential calculations.
+///
+/// # Arguments
+/// * `soil_profile` - The soil profile data.
+/// * `foundation` - The foundation data.
+/// * `foundation_pressure` - The foundation pressure (q) [t/m²].
+///
+/// # Returns
+/// * `Result<(), &'static str>`: Ok if valid, Err with a message if invalid.
+pub fn validate_input(
+    soil_profile: &SoilProfile,
+    foundation: &Foundation,
+    foundation_pressure: f64,
+) -> Result<(), ValidationError> {
+    soil_profile.validate(&[
+        "thickness",
+        "dry_unit_weight",
+        "saturated_unit_weight",
+        "water_content",
+        "liquid_limit",
+        "plastic_limit",
+    ])?;
+    foundation.validate(&["foundation_depth", "foundation_width", "foundation_length"])?;
 
-    for layer in &soil_profile.layers {
-        if layer.thickness <= 0.0 {
-            return Err("Thickness of soil layer must be greater than zero.".to_string());
-        }
-        if layer.plastic_limit.is_none() {
-            return Err("Plastic limit must be provided for each soil layer.".to_string());
-        }
-        if layer.plastic_limit.unwrap() < 0.0 {
-            return Err("Plastic limit must be greater than or equal to zero.".to_string());
-        }
-        if layer.dry_unit_weight.is_none() {
-            return Err("Dry unit weight must be provided for each soil layer.".to_string());
-        }
-        if layer.dry_unit_weight.unwrap() <= 0.0 {
-            return Err("Dry unit weight must be greater than zero.".to_string());
-        }
-        if layer.water_content.is_none() {
-            return Err("Water content must be provided for each soil layer.".to_string());
-        }
-        if layer.water_content.unwrap() < 0.0 {
-            return Err("Water content must be greater than or equal to zero.".to_string());
-        }
-        if layer.liquid_limit.is_none() {
-            return Err("Liquid limit must be provided for each soil layer.".to_string());
-        }
-        if layer.liquid_limit.unwrap() < 0.0 {
-            return Err("Liquid limit must be greater than or equal to zero.".to_string());
-        }
-    }
+    validate_field(
+        "foundation_pressure",
+        Some(foundation_pressure),
+        Some(0.0),
+        None,
+        "loads",
+    )?;
+
     Ok(())
 }
 
@@ -87,12 +76,13 @@ pub fn calc_swelling_potential(
     soil_profile: &mut SoilProfile,
     foundation: &Foundation,
     foundation_pressure: f64,
-) -> SwellingPotentialResult {
-    validate(soil_profile, foundation).expect("Validation failed");
+) -> Result<SwellingPotentialResult, ValidationError> {
+    validate_input(soil_profile, foundation, foundation_pressure)?;
     soil_profile.calc_layer_depths();
-    let df = foundation.foundation_depth;
-    let width = foundation.foundation_width;
-    let length = foundation.foundation_length;
+    let df = foundation.foundation_depth.unwrap();
+    let width = foundation.foundation_width.unwrap();
+    let length = foundation.foundation_length.unwrap();
+
     let net_foundation_pressure = foundation_pressure - soil_profile.calc_normal_stress(df);
 
     let vertical_load = net_foundation_pressure * width * length;
@@ -132,8 +122,8 @@ pub fn calc_swelling_potential(
         });
     }
 
-    SwellingPotentialResult {
+    Ok(SwellingPotentialResult {
         data,
         net_foundation_pressure,
-    }
+    })
 }

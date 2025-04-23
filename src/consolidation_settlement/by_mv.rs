@@ -1,38 +1,33 @@
-use crate::models::{foundation::Foundation, soil_profile::SoilProfile};
+use crate::{
+    models::{foundation::Foundation, soil_profile::SoilProfile},
+    validation::{validate_field, ValidationError},
+};
 
 use super::helper_functions::{calc_delta_stress, get_center_and_thickness};
 
-fn validate(
+/// Validates the input parameters for the consolidation settlement calculation.
+///
+/// # Arguments
+/// * `soil_profile` - The soil profile containing the layers.
+/// * `foundation` - The foundation parameters.
+/// * `foundation_pressure` - The foundation pressure (q) [t/m²].
+///
+/// # Returns
+/// * A result indicating whether the validation was successful or an error occurred.
+pub fn validate_input(
     soil_profile: &SoilProfile,
     foundation: &Foundation,
     foundation_pressure: f64,
-) -> Result<(), String> {
-    if soil_profile.layers.is_empty() {
-        return Err("Soil profile must contain at least one layer.".to_string());
-    }
-    if foundation.foundation_depth < 0.0 {
-        return Err("Foundation depth must be greater than or equal to 0.".to_string());
-    }
-    if foundation.foundation_width <= 0.0 {
-        return Err("Foundation width must be greater than 0.".to_string());
-    }
-    if foundation.foundation_length <= 0.0 {
-        return Err("Foundation length must be greater than 0.".to_string());
-    }
-    if foundation_pressure < 0.0 {
-        return Err("Foundation pressure must be greater than or equal to 0.".to_string());
-    }
-    for layer in &soil_profile.layers {
-        if layer.center.is_none() {
-            return Err("All soil layers must have a defined depth.".to_string());
-        }
-        if layer.mv.is_none() {
-            return Err(
-                "All soil layers must have a defined coefficient of volume compressibility."
-                    .to_string(),
-            );
-        }
-    }
+) -> Result<(), ValidationError> {
+    soil_profile.validate(&["thickness", "mv"])?;
+    foundation.validate(&["foundation_depth"])?;
+    validate_field(
+        "foundation_pressure",
+        Some(foundation_pressure),
+        Some(0.0),
+        None,
+        "loads",
+    )?;
     Ok(())
 }
 
@@ -60,17 +55,18 @@ pub fn calc_single_layer_settlement(mv: f64, h: f64, delta_stress: f64) -> f64 {
 /// # Returns
 /// * A vector of settlements for each layer in the soil profile.
 pub fn calc_settlement(
-    soil_profile: &SoilProfile,
+    soil_profile: &mut SoilProfile,
     foundation: &Foundation,
     foundation_pressure: f64,
-) -> Vec<f64> {
-    validate(soil_profile, foundation, foundation_pressure).unwrap();
+) -> Result<Vec<f64>, ValidationError> {
+    validate_input(soil_profile, foundation, foundation_pressure)?;
+    soil_profile.calc_layer_depths();
     let mut settlements = vec![];
-    let df = foundation.foundation_depth;
-    let width = foundation.foundation_width;
-    let length = foundation.foundation_length;
+    let df = foundation.foundation_depth.unwrap();
+    let width = foundation.foundation_width.unwrap();
+    let length = foundation.foundation_length.unwrap();
     let q_net = foundation_pressure - soil_profile.calc_normal_stress(df);
-    let gwt = soil_profile.ground_water_level;
+    let gwt = soil_profile.ground_water_level.unwrap();
 
     for i in 0..soil_profile.layers.len() {
         if soil_profile.get_layer_index(gwt) > i || soil_profile.get_layer_index(df) > i {
@@ -84,5 +80,5 @@ pub fn calc_settlement(
         let settlement = calc_single_layer_settlement(mv, thickness, delta_stress);
         settlements.push(settlement);
     }
-    settlements
+    Ok(settlements)
 }

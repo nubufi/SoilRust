@@ -10,3 +10,4 @@ pub mod local_soil_class;
 pub mod models;
 pub mod soil_coefficient;
 pub mod swelling_potential;
+pub mod validation;
