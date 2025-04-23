@@ -2,7 +2,7 @@ use crate::{
     helper::interp1d,
     liquefaction::{
         helper_functions::{calc_csr, calc_msf, calc_rd},
-        models::{LiquefactionLayerResult, LiquefactionResult},
+        models::{CommonLiquefactionLayerResult, SptLiquefactionResult},
     },
     models::{
         soil_profile::SoilProfile,
@@ -116,7 +116,7 @@ pub fn calc_liquefacion(
     spt: &mut SPT,
     pga: f64,
     mw: f64,
-) -> Result<LiquefactionResult, ValidationError> {
+) -> Result<SptLiquefactionResult, ValidationError> {
     validate_input(soil_profile, spt)?;
 
     let spt_exp = prepare_spt_exp(spt, soil_profile);
@@ -143,16 +143,10 @@ pub fn calc_liquefacion(
             n1_60_f >= 34,
         ];
         if conditions.iter().any(|&x| x) {
-            let layer_result = LiquefactionLayerResult {
+            let layer_result = CommonLiquefactionLayerResult {
                 depth,
                 normal_stress,
                 effective_stress,
-                crr: None,
-                crr75: None,
-                csr: None,
-                safety_factor: None,
-                is_safe: true,
-                settlement: 0.0,
                 rd,
                 ..Default::default()
             };
@@ -166,7 +160,7 @@ pub fn calc_liquefacion(
 
         let settlement = calc_settlement(safety_factor, thickness, n60);
 
-        let layer_result = LiquefactionLayerResult {
+        let layer_result = CommonLiquefactionLayerResult {
             depth,
             normal_stress,
             effective_stress,
@@ -177,15 +171,15 @@ pub fn calc_liquefacion(
             is_safe: safety_factor > 1.1,
             settlement,
             rd,
-            ..Default::default()
         };
         layer_results.push(layer_result);
 
         // Add the layer result to the liquefaction result
     }
     let total_settlement = layer_results.iter().map(|x| x.settlement).sum();
-    Ok(LiquefactionResult {
+    Ok(SptLiquefactionResult {
         layers: layer_results,
+        spt_exp,
         total_settlement,
         msf,
     })

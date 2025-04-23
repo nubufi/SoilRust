@@ -2,7 +2,7 @@ use crate::{
     helper::interp1d,
     liquefaction::{
         helper_functions::{calc_csr, calc_msf, calc_rd},
-        models::{LiquefactionLayerResult, LiquefactionResult},
+        models::{CommonLiquefactionLayerResult, VSLiquefactionLayerResult, VSLiquefactionResult},
     },
     models::{masw::Masw, soil_profile::SoilProfile},
     validation::ValidationError,
@@ -122,7 +122,7 @@ pub fn calc_liquefacion(
     masw: &mut Masw,
     pga: f64,
     mw: f64,
-) -> Result<LiquefactionResult, ValidationError> {
+) -> Result<VSLiquefactionResult, ValidationError> {
     validate_input(masw, soil_profile)?;
 
     let mut masw_exp = masw.get_idealized_exp("idealized".to_string());
@@ -130,6 +130,7 @@ pub fn calc_liquefacion(
 
     let msf = calc_msf(mw);
     let mut layer_results = Vec::new();
+    let mut vs_layers = Vec::new();
 
     for layer in soil_profile.layers.iter() {
         let thickness = layer.thickness.unwrap();
@@ -151,20 +152,12 @@ pub fn calc_liquefacion(
             vs1 >= vs1c,
         ];
         if conditions.iter().any(|&x| x) {
-            let layer_result = LiquefactionLayerResult {
+            let layer_result = CommonLiquefactionLayerResult {
                 depth,
                 normal_stress,
                 effective_stress,
-                crr: None,
-                crr75: None,
-                csr: None,
-                safety_factor: None,
-                is_safe: true,
-                settlement: 0.0,
                 rd,
-                vs1: Some(vs1),
-                vs1c: Some(vs1c),
-                cn: Some(cn),
+                ..Default::default()
             };
             layer_results.push(layer_result);
             continue;
@@ -175,8 +168,14 @@ pub fn calc_liquefacion(
         let safety_factor = crr / csr;
 
         let settlement = calc_settlement(safety_factor, thickness, vs1);
+        let vs_layer_result = VSLiquefactionLayerResult {
+            vs1: Some(vs1),
+            vs1c: Some(vs1c),
+            cn: Some(cn),
+        };
+        vs_layers.push(vs_layer_result);
 
-        let layer_result = LiquefactionLayerResult {
+        let layer_result = CommonLiquefactionLayerResult {
             depth,
             normal_stress,
             effective_stress,
@@ -187,17 +186,15 @@ pub fn calc_liquefacion(
             is_safe: safety_factor > 1.1,
             settlement,
             rd,
-            vs1: Some(vs1),
-            vs1c: Some(vs1c),
-            cn: Some(cn),
         };
         layer_results.push(layer_result);
 
         // Add the layer result to the liquefaction result
     }
     let total_settlement = layer_results.iter().map(|x| x.settlement).sum();
-    Ok(LiquefactionResult {
+    Ok(VSLiquefactionResult {
         layers: layer_results,
+        vs_layers,
         total_settlement,
         msf,
     })

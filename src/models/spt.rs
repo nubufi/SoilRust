@@ -45,7 +45,7 @@ impl NValue {
     /// Multiply by a factor
     pub fn mul_by_f64(self, factor: f64) -> Self {
         match self {
-            NValue::Value(n) => NValue::Value((n as f64 * factor) as i32),
+            NValue::Value(n) => NValue::Value((n as f64 * factor).ceil() as i32),
             NValue::Refusal => NValue::Refusal,
         }
     }
@@ -61,7 +61,7 @@ impl NValue {
     /// Sum up with a f64
     pub fn add_f64(self, other: f64) -> Self {
         match self {
-            NValue::Value(n) => NValue::Value((n as f64 + other) as i32),
+            NValue::Value(n) => NValue::Value((n as f64 + other).ceil() as i32),
             NValue::Refusal => NValue::Refusal,
         }
     }
@@ -216,7 +216,10 @@ impl SPTBlow {
     /// # Arguments
     /// * `sigma_effective` - Effective overburden pressure in ton
     pub fn set_cn(&mut self, sigma_effective: f64) {
-        self.cn = Some(f64::min(f64::sqrt(9.81 / sigma_effective) * 9.78, 1.7))
+        self.cn = Some(f64::min(
+            f64::sqrt(1. / (9.81 * sigma_effective)) * 9.78,
+            1.7,
+        ))
     }
 
     /// Set alpha and beta factors

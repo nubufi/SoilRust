@@ -23,7 +23,7 @@ fn test_nvalue_to_i32() {
 #[test]
 fn test_nvalue_mul_by_f64() {
     assert_eq!(NValue::Value(10).mul_by_f64(2.0), NValue::Value(20));
-    assert_eq!(NValue::Value(5).mul_by_f64(2.5), NValue::Value(12)); // 5 * 2.5 = 12.5 -> truncated to 12
+    assert_eq!(NValue::Value(5).mul_by_f64(2.5), NValue::Value(13)); // 5 * 2.5 = 12.5 -> truncated to 13
     assert_eq!(NValue::Refusal.mul_by_f64(3.0), NValue::Refusal);
 }
 
@@ -44,8 +44,8 @@ fn test_nvalue_sum_with() {
 
 #[test]
 fn test_nvalue_add_f64() {
-    assert_eq!(NValue::Value(10).add_f64(5.5), NValue::Value(15)); // 10 + 5.5 -> truncated to 15
-    assert_eq!(NValue::Value(3).add_f64(1.9), NValue::Value(4)); // 3 + 1.9 -> truncated to 4
+    assert_eq!(NValue::Value(10).add_f64(5.5), NValue::Value(16)); // 10 + 5.5 -> truncated to 16
+    assert_eq!(NValue::Value(3).add_f64(1.9), NValue::Value(5)); // 3 + 1.9 -> truncated to 5
     assert_eq!(NValue::Refusal.add_f64(5.0), NValue::Refusal);
 }
 
@@ -162,7 +162,7 @@ fn test_apply_corrections() {
             fine_content: Some(10.0),
             ..Default::default()
         }],
-        ground_water_level: Some(5.0),
+        ground_water_level: Some(10.0),
     };
     let cr = 1.1;
     let cs = 0.9;
@@ -173,11 +173,11 @@ fn test_apply_corrections() {
 
     assert_eq!(spt.n60.unwrap().to_i32(), 30);
     assert_eq!(spt.n90.unwrap().to_i32(), 45);
-    assert!((spt.cn.unwrap() - 1.7).abs() < 0.001);
+    assert!((spt.cn.unwrap() - 0.735).abs() < 0.001);
     assert!((spt.alpha.unwrap() - 0.869).abs() < 0.001);
     assert!((spt.beta.unwrap() - 1.021).abs() < 0.1);
-    assert_eq!(spt.n1_60.unwrap().to_i32(), 53);
-    assert_eq!(spt.n1_60f.unwrap().to_i32(), 54);
+    assert_eq!(spt.n1_60.unwrap().to_i32(), 23);
+    assert_eq!(spt.n1_60f.unwrap().to_i32(), 25);
 }
 // -------------------------------------------------------------------------------------------
 
