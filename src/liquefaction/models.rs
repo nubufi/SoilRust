@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 /// Result of liquefaction analysis for a single layer
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LiquefactionLayerResult {
+    pub depth: f64,
     pub normal_stress: f64,
     pub effective_stress: f64,
     pub crr: Option<f64>,
@@ -20,6 +21,7 @@ pub struct LiquefactionLayerResult {
 impl Default for LiquefactionLayerResult {
     fn default() -> Self {
         Self {
+            depth: 0.0,
             normal_stress: 0.0,
             effective_stress: 0.0,
             crr: None,

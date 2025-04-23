@@ -150,8 +150,9 @@ pub fn calc_liquefacion(
             plasticity_index >= 12.,
             vs1 >= vs1c,
         ];
-        if conditions.iter().all(|&x| x) {
+        if conditions.iter().any(|&x| x) {
             let layer_result = LiquefactionLayerResult {
+                depth,
                 normal_stress,
                 effective_stress,
                 crr: None,
@@ -176,6 +177,7 @@ pub fn calc_liquefacion(
         let settlement = calc_settlement(safety_factor, thickness, vs1);
 
         let layer_result = LiquefactionLayerResult {
+            depth,
             normal_stress,
             effective_stress,
             crr: Some(crr),

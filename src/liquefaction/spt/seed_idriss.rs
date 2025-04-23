@@ -117,7 +117,7 @@ pub fn calc_liquefacion(
     pga: f64,
     mw: f64,
 ) -> Result<LiquefactionResult, ValidationError> {
-    validate_input(soil_profile, &spt)?;
+    validate_input(soil_profile, spt)?;
 
     let spt_exp = prepare_spt_exp(spt, soil_profile);
 
@@ -142,8 +142,9 @@ pub fn calc_liquefacion(
             n1_60 >= 30,
             n1_60_f >= 34,
         ];
-        if conditions.iter().all(|&x| x) {
+        if conditions.iter().any(|&x| x) {
             let layer_result = LiquefactionLayerResult {
+                depth,
                 normal_stress,
                 effective_stress,
                 crr: None,
@@ -166,6 +167,7 @@ pub fn calc_liquefacion(
         let settlement = calc_settlement(safety_factor, thickness, n60);
 
         let layer_result = LiquefactionLayerResult {
+            depth,
             normal_stress,
             effective_stress,
             crr: Some(crr),
