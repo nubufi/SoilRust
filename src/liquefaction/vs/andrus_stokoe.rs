@@ -118,12 +118,13 @@ pub fn calc_settlement(fs: f64, layer_thickness: f64, vs1: f64) -> f64 {
 /// # Returns
 /// * `LiquefactionResult` - Result of liquefaction analysis
 pub fn calc_liquefacion(
-    soil_profile: &SoilProfile,
+    soil_profile: &mut SoilProfile,
     masw: &mut Masw,
     pga: f64,
     mw: f64,
 ) -> Result<VSLiquefactionResult, ValidationError> {
     validate_input(masw, soil_profile)?;
+    soil_profile.calc_layer_depths();
 
     let mut masw_exp = masw.get_idealized_exp("idealized".to_string());
     masw_exp.calc_depths();

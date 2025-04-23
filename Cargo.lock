@@ -495,7 +495,7 @@ dependencies = [
 
 [[package]]
 name = "soilrust"
-version = "0.7.3"
+version = "0.7.4"
 dependencies = [
  "approx",
  "criterion",
