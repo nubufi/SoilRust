@@ -103,7 +103,7 @@ impl CPTLayer {
                 ),
                 unknown => Err(ValidationError {
                     code: "cpt.invalid_field".into(),
-                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                    message: format!("Field '{}' is not valid for CPT.", unknown),
                 }),
             };
 

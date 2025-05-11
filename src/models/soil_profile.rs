@@ -8,7 +8,7 @@ use crate::validation::{validate_field, ValidationError};
 /// shear strength, stiffness, and classification parameters. The parameters are
 /// divided into **total stress** (undrained) and **effective stress** (drained)
 /// conditions for comprehensive modeling.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SoilLayer {
     pub thickness: Option<f64>,                 // meter
     pub natural_unit_weight: Option<f64>,       // t/m³
@@ -35,36 +35,7 @@ pub struct SoilLayer {
     pub mv: Option<f64>,                        // volume compressibility coefficient in m²/t
     pub shear_wave_velocity: Option<f64>,       // m/s
 }
-impl Default for SoilLayer {
-    fn default() -> Self {
-        Self {
-            thickness: None,
-            natural_unit_weight: None,
-            dry_unit_weight: None,
-            saturated_unit_weight: None,
-            depth: None,
-            center: None,
-            damping_ratio: None,
-            fine_content: None,
-            liquid_limit: None,
-            plastic_limit: None,
-            plasticity_index: None,
-            cu: None,
-            c_prime: None,
-            phi_u: None,
-            phi_prime: None,
-            water_content: None,
-            poissons_ratio: None,
-            elastic_modulus: None,
-            void_ratio: None,
-            recompression_index: None,
-            compression_index: None,
-            preconsolidation_pressure: None,
-            mv: None,
-            shear_wave_velocity: None,
-        }
-    }
-}
+
 impl SoilLayer {
     pub fn new(thickness: f64) -> Self {
         Self {

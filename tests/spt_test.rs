@@ -75,18 +75,10 @@ fn test_nvalue_ordering() {
 // Test SPTBlow
 #[test]
 fn test_sptblow_new() {
-    let spt = SPTBlow::new(
-        10.0,
-        NValue::from_i32(5),
-        NValue::from_i32(10),
-        NValue::from_i32(15),
-    );
+    let spt = SPTBlow::new(10.0, NValue::from_i32(25));
 
     assert_eq!(spt.depth, Some(10.0));
-    assert_eq!(spt.n1, Some(NValue::from_i32(5)));
-    assert_eq!(spt.n2, Some(NValue::from_i32(10)));
-    assert_eq!(spt.n3, Some(NValue::from_i32(15)));
-    assert_eq!(spt.n, Some(NValue::from_i32(25))); // n2 + n3
+    assert_eq!(spt.n, Some(NValue::from_i32(25)));
     assert_eq!(spt.n60, None);
     assert_eq!(spt.n90, None);
     assert_eq!(spt.n1_60, None);
@@ -98,12 +90,7 @@ fn test_sptblow_new() {
 
 #[test]
 fn test_apply_energy_correction() {
-    let mut spt = SPTBlow::new(
-        10.0,
-        NValue::from_i32(5),
-        NValue::from_i32(10),
-        NValue::from_i32(15),
-    );
+    let mut spt = SPTBlow::new(10.0, NValue::from_i32(25));
     spt.apply_energy_correction(1.2);
 
     assert_eq!(spt.n60, Some(NValue::from_i32(30))); // 25 * 1.2 = 30
@@ -112,12 +99,7 @@ fn test_apply_energy_correction() {
 
 #[test]
 fn test_set_cn() {
-    let mut spt = SPTBlow::new(
-        10.0,
-        NValue::from_i32(5),
-        NValue::from_i32(10),
-        NValue::from_i32(15),
-    );
+    let mut spt = SPTBlow::new(10.0, NValue::from_i32(25));
     spt.set_cn(0.5);
 
     assert_eq!(spt.cn, Some(f64::min(f64::sqrt(1. / 0.5) * 9.78, 1.7))); // sqrt(1/0.5) * 9.78, capped at 1.7
@@ -125,12 +107,7 @@ fn test_set_cn() {
 
 #[test]
 fn test_set_alpha_beta() {
-    let mut spt = SPTBlow::new(
-        10.0,
-        NValue::from_i32(5),
-        NValue::from_i32(10),
-        NValue::from_i32(15),
-    );
+    let mut spt = SPTBlow::new(10.0, NValue::from_i32(25));
 
     spt.set_alpha_beta(4.0);
     assert_eq!(spt.alpha, Some(0.0));
@@ -147,12 +124,7 @@ fn test_set_alpha_beta() {
 
 #[test]
 fn test_apply_corrections() {
-    let mut spt = SPTBlow::new(
-        10.0,
-        NValue::from_i32(5),
-        NValue::from_i32(10),
-        NValue::from_i32(15),
-    );
+    let mut spt = SPTBlow::new(10.0, NValue::from_i32(25));
 
     let soil_profile = SoilProfile {
         layers: vec![soil_profile::SoilLayer {
@@ -185,13 +157,13 @@ fn test_apply_corrections() {
 #[test]
 fn test_get_idealized_exp() {
     let mut exp1 = SPTExp::new(vec![], "exp1".to_string());
-    exp1.add_blow(1.5, NValue::Value(0), NValue::Value(0), NValue::Value(10));
-    exp1.add_blow(2., NValue::Value(0), NValue::Value(0), NValue::Value(20));
-    exp1.add_blow(3., NValue::Value(0), NValue::Value(0), NValue::Refusal);
+    exp1.add_blow(1.5, NValue::Value(10));
+    exp1.add_blow(2., NValue::Value(20));
+    exp1.add_blow(3., NValue::Refusal);
 
     let mut exp2 = SPTExp::new(vec![], "exp2".to_string());
-    exp2.add_blow(1.5, NValue::Value(0), NValue::Value(0), NValue::Value(15));
-    exp2.add_blow(3., NValue::Value(0), NValue::Value(0), NValue::Value(14));
+    exp2.add_blow(1.5, NValue::Value(15));
+    exp2.add_blow(3., NValue::Value(14));
 
     let cr = 1.1;
     let cs = 0.9;

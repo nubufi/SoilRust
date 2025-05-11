@@ -98,9 +98,6 @@ impl Ord for NValue {
 pub struct SPTBlow {
     pub thickness: Option<f64>,
     pub depth: Option<f64>,
-    pub n1: Option<NValue>,
-    pub n2: Option<NValue>,
-    pub n3: Option<NValue>,
     pub n: Option<NValue>,
     pub n60: Option<NValue>,
     pub n90: Option<NValue>,
@@ -116,16 +113,11 @@ impl SPTBlow {
     ///
     /// # Arguments
     /// * `depth` - Depth of the blow
-    /// * `n1` - N-value of the first blow
-    /// * `n2` - N-value of the second blow
-    /// * `n3` - N-value of the third blow
-    pub fn new(depth: f64, n1: NValue, n2: NValue, n3: NValue) -> Self {
+    /// * `n` - N-value of the blow
+    pub fn new(depth: f64, n: NValue) -> Self {
         Self {
             depth: Some(depth),
-            n1: Some(n1),
-            n2: Some(n2),
-            n3: Some(n3),
-            n: Some(n2.sum_with(n3)),
+            n: Some(n),
             ..Default::default()
         }
     }
@@ -142,36 +134,6 @@ impl SPTBlow {
             let result = match field {
                 "depth" => validate_field("depth", self.depth, Some(0.0), None, "spt"),
                 "thickness" => validate_field("thickness", self.thickness, Some(0.0), None, "spt"),
-                "n1" => {
-                    if let Some(n1) = self.n1 {
-                        validate_field("n1", Some(n1.to_i32()), Some(1), None, "spt")
-                    } else {
-                        Err(ValidationError {
-                            code: "spt.n1.missing".into(),
-                            message: "N1 value is missing in SptBlow".into(),
-                        })
-                    }
-                }
-                "n2" => {
-                    if let Some(n2) = self.n2 {
-                        validate_field("n2", Some(n2.to_i32()), Some(1), None, "spt")
-                    } else {
-                        Err(ValidationError {
-                            code: "spt.n2.missing".into(),
-                            message: "N2 value is missing in SptBlow".into(),
-                        })
-                    }
-                }
-                "n3" => {
-                    if let Some(n3) = self.n3 {
-                        validate_field("n3", Some(n3.to_i32()), Some(1), None, "spt")
-                    } else {
-                        Err(ValidationError {
-                            code: "spt.n3.missing".into(),
-                            message: "N3 value is missing in SptBlow".into(),
-                        })
-                    }
-                }
                 "n" => {
                     if let Some(n) = self.n {
                         validate_field("n", Some(n.to_i32()), Some(1), None, "spt")
@@ -184,7 +146,7 @@ impl SPTBlow {
                 }
                 unknown => Err(ValidationError {
                     code: "spt.invalid_field".into(),
-                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                    message: format!("Field '{}' is not valid for SPT.", unknown),
                 }),
             };
 
@@ -192,13 +154,6 @@ impl SPTBlow {
         }
 
         Ok(())
-    }
-
-    /// Calculate N value from n2, and n3
-    pub fn calc_n(&mut self) {
-        if let (Some(n2), Some(n3)) = (self.n2, self.n3) {
-            self.n = Some(n2.sum_with(n3));
-        }
     }
 
     /// Apply energy correction
@@ -289,13 +244,6 @@ impl SPTExp {
         Self { blows, name }
     }
 
-    /// Calculate N values for all blows
-    pub fn calc_all_n(&mut self) {
-        for blow in &mut self.blows {
-            blow.calc_n();
-        }
-    }
-
     /// Apply energy correction
     ///
     /// # Arguments
@@ -310,11 +258,9 @@ impl SPTExp {
     ///
     /// # Arguments
     /// * `depth` - Depth of the blow
-    /// * `n1` - N-value of the first blow
-    /// * `n2` - N-value of the second blow
-    /// * `n3` - N-value of the third blow
-    pub fn add_blow(&mut self, depth: f64, n1: NValue, n2: NValue, n3: NValue) {
-        self.blows.push(SPTBlow::new(depth, n1, n2, n3));
+    /// * `n` - N-value of the blow
+    pub fn add_blow(&mut self, depth: f64, n: NValue) {
+        self.blows.push(SPTBlow::new(depth, n));
     }
 
     /// Calculate the thickness of each blow
@@ -404,13 +350,6 @@ impl SPT {
         }
     }
 
-    /// Calculate N values for all experiments
-    pub fn calc_all_n(&mut self) {
-        for exp in &mut self.exps {
-            exp.calc_all_n();
-        }
-    }
-
     /// Apply energy correction
     ///
     /// # Arguments
@@ -471,9 +410,6 @@ impl SPT {
             // Add to new SPTExp
             idealized_blows.push(SPTBlow {
                 depth: Some(depth.into_inner()),
-                n1: Some(NValue::Value(0)), // Placeholder (could be refined if needed)
-                n2: Some(NValue::Value(0)),
-                n3: Some(NValue::Value(0)),
                 n: Some(selected_n),
                 ..Default::default()
             });

@@ -49,7 +49,7 @@ impl MaswLayer {
                 "vp" => validate_field("vp", self.vp, Some(0.0), None, "masw"),
                 unknown => Err(ValidationError {
                     code: "masw.invalid_field".into(),
-                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                    message: format!("Field '{}' is not valid for MASW.", unknown),
                 }),
             };
 

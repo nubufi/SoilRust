@@ -5,14 +5,13 @@ use soilrust::{
     models::spt::{NValue, SPTBlow, SPTExp, SPT},
 };
 
-fn create_blow(depth: f64, n3: i32) -> SPTBlow {
+fn create_blow(depth: f64, n: i32) -> SPTBlow {
     SPTBlow {
         depth: Some(depth),
-        n2: Some(NValue::from_i32(1)),
-        n3: if n3 == 50 {
+        n: if n == 50 {
             Some(NValue::Refusal)
         } else {
-            Some(NValue::from_i32(n3 - 1))
+            Some(NValue::from_i32(n))
         },
         ..Default::default()
     }

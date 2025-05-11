@@ -35,7 +35,7 @@ pub struct SptSoilClassificationResult {
 /// # Returns
 /// * `Result` - Ok if validation passes, Err if validation fails
 pub fn validate_input(spt: &SPT) -> Result<(), ValidationError> {
-    spt.validate(&["n2", "n3", "depth"])?;
+    spt.validate(&["n", "depth"])?;
 
     Ok(())
 }
@@ -47,8 +47,6 @@ pub fn validate_input(spt: &SPT) -> Result<(), ValidationError> {
 /// # Returns
 /// * `SPTExp` - The prepared SPTExp object with calculated N values and applied corrections.
 fn prepare_spt_exp(spt: &mut SPT) -> SPTExp {
-    spt.calc_all_n();
-
     let mut spt_exp = spt.get_idealized_exp("idealized".to_string());
     spt_exp.apply_energy_correction(spt.energy_correction_factor.unwrap());
 

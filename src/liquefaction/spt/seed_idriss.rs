@@ -20,7 +20,7 @@ use crate::{
 /// # Returns
 /// * `Result` - Ok if validation passes, Err if validation fails
 pub fn validate_input(soil_profile: &SoilProfile, spt: &SPT) -> Result<(), ValidationError> {
-    spt.validate(&["n2", "n3", "depth"])?;
+    spt.validate(&["n", "depth"])?;
     soil_profile.validate(&[
         "thickness",
         "dry_unit_weight",
@@ -33,7 +33,6 @@ pub fn validate_input(soil_profile: &SoilProfile, spt: &SPT) -> Result<(), Valid
 }
 
 fn prepare_spt_exp(spt: &mut SPT, soil_profile: &SoilProfile) -> SPTExp {
-    spt.calc_all_n();
     let cr = spt.rod_length_correction_factor.unwrap();
     let cs = spt.sampler_correction_factor.unwrap();
     let cb = spt.diameter_correction_factor.unwrap();

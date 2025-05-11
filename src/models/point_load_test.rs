@@ -70,7 +70,7 @@ impl PointLoadSample {
                 "d" => validate_field("d", self.d, Some(0.00001), None, "point_load_test"),
                 unknown => Err(ValidationError {
                     code: "point_load_test.invalid_field".into(),
-                    message: format!("Field '{}' is not valid for Loads.", unknown),
+                    message: format!("Field '{}' is not valid for Point Load Test.", unknown),
                 }),
             };
 
