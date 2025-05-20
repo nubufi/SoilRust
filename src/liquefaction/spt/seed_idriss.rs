@@ -160,6 +160,7 @@ pub fn calc_liquefacion(
         let settlement = calc_settlement(safety_factor, thickness, n60);
 
         let layer_result = CommonLiquefactionLayerResult {
+            soil_layer: soil_layer.clone(),
             depth,
             normal_stress,
             effective_stress,

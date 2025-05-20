@@ -1,9 +1,10 @@
-use crate::models::spt::SPTExp;
+use crate::models::{soil_profile::SoilLayer, spt::SPTExp};
 use serde::{Deserialize, Serialize};
 
 /// Result of liquefaction analysis for a single layer
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommonLiquefactionLayerResult {
+    pub soil_layer: SoilLayer,
     pub depth: f64,
     pub normal_stress: f64,
     pub effective_stress: f64,
@@ -19,6 +20,7 @@ pub struct CommonLiquefactionLayerResult {
 impl Default for CommonLiquefactionLayerResult {
     fn default() -> Self {
         Self {
+            soil_layer: SoilLayer::default(),
             depth: 0.0,
             normal_stress: 0.0,
             effective_stress: 0.0,

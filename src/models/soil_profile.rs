@@ -10,30 +10,31 @@ use crate::validation::{validate_field, ValidationError};
 /// conditions for comprehensive modeling.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SoilLayer {
-    pub thickness: Option<f64>,                 // meter
-    pub natural_unit_weight: Option<f64>,       // t/m³
-    pub dry_unit_weight: Option<f64>,           // t/m³
-    pub saturated_unit_weight: Option<f64>,     // t/m³
-    pub depth: Option<f64>,                     // meter
-    pub center: Option<f64>,                    // meter
-    pub damping_ratio: Option<f64>,             // percentage
-    pub fine_content: Option<f64>,              // percentage
-    pub liquid_limit: Option<f64>,              // percentage
-    pub plastic_limit: Option<f64>,             // percentage
-    pub plasticity_index: Option<f64>,          // percentage
-    pub cu: Option<f64>,                        // Undrained shear strength in t/m²
-    pub c_prime: Option<f64>,                   // Effective cohesion in t/m²
-    pub phi_u: Option<f64>,                     // Undrained internal friction angle in degrees
-    pub phi_prime: Option<f64>,                 // Effective internal friction angle in degrees
-    pub water_content: Option<f64>,             // percentage
-    pub poissons_ratio: Option<f64>,            // Poisson's ratio
-    pub elastic_modulus: Option<f64>,           // t/m²
-    pub void_ratio: Option<f64>,                // Void ratio
-    pub recompression_index: Option<f64>,       // Recompression index
-    pub compression_index: Option<f64>,         // Compression index
+    pub soil_classification: Option<String>, // e.g., "CLAY", "SAND", "SILT"
+    pub thickness: Option<f64>,              // meter
+    pub natural_unit_weight: Option<f64>,    // t/m³
+    pub dry_unit_weight: Option<f64>,        // t/m³
+    pub saturated_unit_weight: Option<f64>,  // t/m³
+    pub depth: Option<f64>,                  // meter
+    pub center: Option<f64>,                 // meter
+    pub damping_ratio: Option<f64>,          // percentage
+    pub fine_content: Option<f64>,           // percentage
+    pub liquid_limit: Option<f64>,           // percentage
+    pub plastic_limit: Option<f64>,          // percentage
+    pub plasticity_index: Option<f64>,       // percentage
+    pub cu: Option<f64>,                     // Undrained shear strength in t/m²
+    pub c_prime: Option<f64>,                // Effective cohesion in t/m²
+    pub phi_u: Option<f64>,                  // Undrained internal friction angle in degrees
+    pub phi_prime: Option<f64>,              // Effective internal friction angle in degrees
+    pub water_content: Option<f64>,          // percentage
+    pub poissons_ratio: Option<f64>,         // Poisson's ratio
+    pub elastic_modulus: Option<f64>,        // t/m²
+    pub void_ratio: Option<f64>,             // Void ratio
+    pub recompression_index: Option<f64>,    // Recompression index
+    pub compression_index: Option<f64>,      // Compression index
     pub preconsolidation_pressure: Option<f64>, // t/m²
-    pub mv: Option<f64>,                        // volume compressibility coefficient in m²/t
-    pub shear_wave_velocity: Option<f64>,       // m/s
+    pub mv: Option<f64>,                     // volume compressibility coefficient in m²/t
+    pub shear_wave_velocity: Option<f64>,    // m/s
 }
 
 impl SoilLayer {

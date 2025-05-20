@@ -177,6 +177,7 @@ pub fn calc_liquefacion(
         vs_layers.push(vs_layer_result);
 
         let layer_result = CommonLiquefactionLayerResult {
+            soil_layer: soil_layer.clone(),
             depth,
             normal_stress,
             effective_stress,
