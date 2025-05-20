@@ -154,6 +154,7 @@ pub fn calc_liquefacion(
         ];
         if conditions.iter().any(|&x| x) {
             let layer_result = CommonLiquefactionLayerResult {
+                soil_layer: soil_layer.clone(),
                 depth,
                 normal_stress,
                 effective_stress,
@@ -170,6 +171,7 @@ pub fn calc_liquefacion(
 
         let settlement = calc_settlement(safety_factor, thickness, vs1);
         let vs_layer_result = VSLiquefactionLayerResult {
+            vs,
             vs1: Some(vs1),
             vs1c: Some(vs1c),
             cn: Some(cn),

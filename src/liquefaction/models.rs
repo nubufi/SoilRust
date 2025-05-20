@@ -38,6 +38,7 @@ impl Default for CommonLiquefactionLayerResult {
 /// Result of liquefaction analysis for a single layer
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VSLiquefactionLayerResult {
+    pub vs: f64,
     pub vs1: Option<f64>,
     pub vs1c: Option<f64>,
     pub cn: Option<f64>,
