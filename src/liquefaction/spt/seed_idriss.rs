@@ -33,13 +33,12 @@ pub fn validate_input(soil_profile: &SoilProfile, spt: &SPT) -> Result<(), Valid
 }
 
 fn prepare_spt_exp(spt: &mut SPT, soil_profile: &SoilProfile) -> SPTExp {
-    let cr = spt.rod_length_correction_factor.unwrap();
     let cs = spt.sampler_correction_factor.unwrap();
     let cb = spt.diameter_correction_factor.unwrap();
     let ce = spt.energy_correction_factor.unwrap();
 
     let mut spt_exp = spt.get_idealized_exp("idealized".to_string());
-    spt_exp.apply_corrections(soil_profile, cr, cs, cb, ce);
+    spt_exp.apply_corrections(soil_profile, cs, cb, ce);
 
     spt_exp.calc_thicknesses();
 

@@ -104,6 +104,7 @@ pub struct SPTBlow {
     pub n1_60: Option<NValue>,
     pub n1_60f: Option<NValue>,
     pub cn: Option<f64>,
+    pub cr: Option<f64>,
     pub alpha: Option<f64>,
     pub beta: Option<f64>,
 }
@@ -177,6 +178,16 @@ impl SPTBlow {
         ))
     }
 
+    /// Set rod length correction factor
+    pub fn set_cr(&mut self) {
+        self.cr = match self.depth {
+            z if z <= Some(4.0) => Some(0.75),
+            z if z <= Some(6.0) => Some(0.85),
+            z if z <= Some(10.0) => Some(0.95),
+            _ => Some(1.0),
+        };
+    }
+
     /// Set alpha and beta factors
     ///
     /// # Arguments
@@ -201,16 +212,10 @@ impl SPTBlow {
     /// * `cs` - sampler correction factor
     /// * `cb` - borehole diameter correction factor
     /// * `ce` - energy correction factor
-    pub fn apply_corrections(
-        &mut self,
-        soil_profile: &SoilProfile,
-        cr: f64,
-        cs: f64,
-        cb: f64,
-        ce: f64,
-    ) {
+    pub fn apply_corrections(&mut self, soil_profile: &SoilProfile, cs: f64, cb: f64, ce: f64) {
         self.apply_energy_correction(ce);
         self.set_cn(soil_profile.calc_effective_stress(self.depth.unwrap()));
+        self.set_cr();
         self.set_alpha_beta(
             soil_profile
                 .get_layer_at_depth(self.depth.unwrap())
@@ -218,8 +223,8 @@ impl SPTBlow {
                 .unwrap_or(0.0),
         );
 
-        if let (Some(n60), Some(cn), Some(alpha), Some(beta)) =
-            (self.n60, self.cn, self.alpha, self.beta)
+        if let (Some(n60), Some(cn), Some(cr), Some(alpha), Some(beta)) =
+            (self.n60, self.cn, self.cr, self.alpha, self.beta)
         {
             let n1_60 = n60.mul_by_f64(cn * cr * cs * cb);
             self.n1_60 = Some(n1_60);
@@ -276,21 +281,13 @@ impl SPTExp {
     ///
     /// # Arguments
     /// * `soil_profile` - Soil profile
-    /// * `cr` - rod length correction factor
     /// * `cs` - sampler correction factor
     /// * `cb` - borehole diameter correction factor
     /// * `ce` - energy correction factor
-    pub fn apply_corrections(
-        &mut self,
-        soil_profile: &SoilProfile,
-        cr: f64,
-        cs: f64,
-        cb: f64,
-        ce: f64,
-    ) {
+    pub fn apply_corrections(&mut self, soil_profile: &SoilProfile, cs: f64, cb: f64, ce: f64) {
         self.blows
             .iter_mut()
-            .for_each(|blow| blow.apply_corrections(soil_profile, cr, cs, cb, ce));
+            .for_each(|blow| blow.apply_corrections(soil_profile, cs, cb, ce));
     }
     /// Validates specific fields of the SPTExp using field names.
     ///
@@ -321,7 +318,6 @@ pub struct SPT {
     pub energy_correction_factor: Option<f64>,
     pub diameter_correction_factor: Option<f64>,
     pub sampler_correction_factor: Option<f64>,
-    pub rod_length_correction_factor: Option<f64>,
     pub idealization_method: SelectionMethod,
 }
 impl SPT {
@@ -331,13 +327,11 @@ impl SPT {
     /// * `energy_correction_factor` - Energy correction factor to convert N value to N60
     /// * `diameter_correction_factor` - Borehole diameter correction factor
     /// * `sampler_correction_factor` - Sampler correction factor
-    /// * `rod_length_correction_factor` - Rod length correction factor
     /// * `idealization_method` - Idealization method to use when combining the layers
     pub fn new(
         energy_correction_factor: f64,
         diameter_correction_factor: f64,
         sampler_correction_factor: f64,
-        rod_length_correction_factor: f64,
         idealization_method: SelectionMethod,
     ) -> Self {
         Self {
@@ -345,7 +339,6 @@ impl SPT {
             energy_correction_factor: Some(energy_correction_factor),
             diameter_correction_factor: Some(diameter_correction_factor),
             sampler_correction_factor: Some(sampler_correction_factor),
-            rod_length_correction_factor: Some(rod_length_correction_factor),
             idealization_method,
         }
     }
@@ -437,13 +430,6 @@ impl SPT {
         validate_field(
             "energy_correction_factor",
             self.energy_correction_factor,
-            Some(0.001),
-            None,
-            "spt",
-        )?;
-        validate_field(
-            "rod_length_correction_factor",
-            self.rod_length_correction_factor,
             Some(0.001),
             None,
             "spt",

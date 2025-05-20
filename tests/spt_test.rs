@@ -136,20 +136,19 @@ fn test_apply_corrections() {
         }],
         ground_water_level: Some(10.0),
     };
-    let cr = 1.1;
     let cs = 0.9;
     let cb = 1.05;
     let ce = 1.2;
 
-    spt.apply_corrections(&soil_profile, cr, cs, cb, ce);
+    spt.apply_corrections(&soil_profile, cs, cb, ce);
 
     assert_eq!(spt.n60.unwrap().to_i32(), 30);
     assert_eq!(spt.n90.unwrap().to_i32(), 45);
     assert!((spt.cn.unwrap() - 0.735).abs() < 0.001);
     assert!((spt.alpha.unwrap() - 0.869).abs() < 0.001);
     assert!((spt.beta.unwrap() - 1.021).abs() < 0.1);
-    assert_eq!(spt.n1_60.unwrap().to_i32(), 23);
-    assert_eq!(spt.n1_60f.unwrap().to_i32(), 25);
+    assert_eq!(spt.n1_60.unwrap().to_i32(), 20);
+    assert_eq!(spt.n1_60f.unwrap().to_i32(), 22);
 }
 // -------------------------------------------------------------------------------------------
 
@@ -165,11 +164,10 @@ fn test_get_idealized_exp() {
     exp2.add_blow(1.5, NValue::Value(15));
     exp2.add_blow(3., NValue::Value(14));
 
-    let cr = 1.1;
     let cs = 0.9;
     let cb = 1.05;
     let ce = 1.2;
-    let mut spt = SPT::new(ce, cb, cs, cr, SelectionMethod::Min);
+    let mut spt = SPT::new(ce, cb, cs, SelectionMethod::Min);
     spt.add_exp(exp1);
     spt.add_exp(exp2);
 

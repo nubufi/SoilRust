@@ -32,7 +32,6 @@ fn test_case_1() {
         energy_correction_factor: Some(1.0),
         diameter_correction_factor: Some(1.0),
         sampler_correction_factor: Some(1.0),
-        rod_length_correction_factor: Some(1.0),
         idealization_method: SelectionMethod::Min,
         exps: vec![exp.clone()],
     };
@@ -58,7 +57,6 @@ fn test_case_2() {
         energy_correction_factor: Some(1.0),
         diameter_correction_factor: Some(1.0),
         sampler_correction_factor: Some(1.0),
-        rod_length_correction_factor: Some(1.0),
         idealization_method: SelectionMethod::Min,
         exps: vec![exp.clone()],
     };
@@ -85,7 +83,6 @@ fn test_case_3() {
         energy_correction_factor: Some(1.0),
         diameter_correction_factor: Some(1.0),
         sampler_correction_factor: Some(1.0),
-        rod_length_correction_factor: Some(1.0),
         idealization_method: SelectionMethod::Min,
         exps: vec![exp.clone()],
     };
