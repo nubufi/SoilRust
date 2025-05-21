@@ -4,15 +4,15 @@
 /// # Arguments
 ///
 /// * `settlement` - The settlement of the foundation in meters.
-/// * `foundation_load` - The load on the foundation in tons.
+/// * `foundation_pressure` - The load on the foundation in tons.
 ///
 /// # Returns
 /// * The soil coefficient in tons per cubic meter (t/m³).
-pub fn calc_by_settlement(settlement: f64, vertical_load: f64) -> f64 {
+pub fn calc_by_settlement(settlement: f64, foundation_pressure: f64) -> f64 {
     if settlement <= 0.0 {
         return 999_999.0;
     }
-    100.0 * vertical_load / settlement // units: t/m³
+    100.0 * foundation_pressure / settlement // units: t/m³
 }
 
 /// Calculates the soil coefficient based on bearing capacity.
