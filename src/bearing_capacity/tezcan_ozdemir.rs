@@ -13,6 +13,9 @@ pub struct Output {
     /// Unit weight of the soil in t/m³.
     pub unit_weight: f64,
 
+    /// The pressure exerted by the foundation in ton/m2.
+    pub qmax: f64,
+
     /// Allowable bearing capacity in ton/m2.
     pub allowable_bearing_capacity: f64,
 
@@ -117,5 +120,6 @@ pub fn calc_bearing_capacity(
         allowable_bearing_capacity: bearing_capacity,
         is_safe: bearing_capacity >= foundation_pressure,
         safety_factor,
+        qmax: foundation_pressure,
     })
 }

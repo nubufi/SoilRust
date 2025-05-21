@@ -380,5 +380,6 @@ pub fn calc_bearing_capacity(
         is_safe,
         ground_factors,
         base_factors,
+        qmax: foundation_pressure,
     })
 }

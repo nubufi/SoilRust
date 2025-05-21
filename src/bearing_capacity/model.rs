@@ -67,4 +67,5 @@ pub struct BearingCapacityResult {
     pub ultimate_bearing_capacity: f64,
     pub allowable_bearing_capacity: f64,
     pub is_safe: bool,
+    pub qmax: f64,
 }

@@ -24,7 +24,7 @@ pub struct Output {
     pub allowable_bearing_capacity: f64,
 
     /// The pressure exerted by the foundation in ton/m2.
-    pub foundation_pressure: f64,
+    pub qmax: f64,
 
     /// Indicates the depth at which the bearing capacity is calculated in meters.
     pub df: f64,
@@ -145,7 +145,7 @@ pub fn calc_bearing_capacity(
         allowable_bearing_capacity,
         is_safe,
         safety_factor,
-        foundation_pressure,
+        qmax: foundation_pressure,
         df,
     })
 }
