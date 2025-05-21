@@ -132,9 +132,9 @@ pub fn calc_bearing_capacity(
     let d = sample.d.unwrap();
     let c = get_generalized_c_value(d);
 
-    let ucs = is50 * c;
+    let ucs = is50 * c * MPA_TO_TON;
 
-    let allowable_bearing_capacity = MPA_TO_TON * ucs / safety_factor;
+    let allowable_bearing_capacity = ucs / safety_factor;
     let is_safe = allowable_bearing_capacity >= foundation_pressure;
 
     Ok(Output {
