@@ -3,7 +3,10 @@ use crate::{
     validation::{validate_field, ValidationError},
 };
 
-use super::helper_functions::{calc_delta_stress, get_center_and_thickness};
+use super::{
+    helper_functions::{calc_delta_stress, get_center_and_thickness},
+    model::SettlementResult,
+};
 
 /// Validates the input parameters for the consolidation settlement calculation.
 ///
@@ -58,7 +61,7 @@ pub fn calc_settlement(
     soil_profile: &mut SoilProfile,
     foundation: &Foundation,
     foundation_pressure: f64,
-) -> Result<Vec<f64>, ValidationError> {
+) -> Result<SettlementResult, ValidationError> {
     validate_input(soil_profile, foundation, foundation_pressure)?;
     soil_profile.calc_layer_depths();
     let mut settlements = vec![];
@@ -80,5 +83,9 @@ pub fn calc_settlement(
         let settlement = calc_single_layer_settlement(mv, thickness, delta_stress);
         settlements.push(settlement);
     }
-    Ok(settlements)
+    Ok(SettlementResult {
+        settlement_per_layer: settlements.clone(),
+        total_settlement: settlements.iter().sum(),
+        qnet: q_net,
+    })
 }

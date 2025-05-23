@@ -84,11 +84,15 @@ fn test_calc_elastic_settlement() {
     let foundation_data = create_foundation_data();
     let foundation_pressure = 50.;
 
-    let settlements =
+    let result =
         calc_elastic_settlement(&mut soil_profile, &foundation_data, foundation_pressure).unwrap();
     let expected_settlements = &[1.058, 2.195, 4.613];
 
-    for (settlement, expected) in settlements.iter().zip(expected_settlements.iter()) {
+    for (settlement, expected) in result
+        .settlement_per_layer
+        .iter()
+        .zip(expected_settlements.iter())
+    {
         assert_abs_diff_eq!(settlement, expected, epsilon = 1e-3);
     }
 }

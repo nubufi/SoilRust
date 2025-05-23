@@ -3,7 +3,10 @@ use crate::{
     validation::{validate_field, ValidationError},
 };
 
-use super::helper_functions::{calc_delta_stress, get_center_and_thickness};
+use super::{
+    helper_functions::{calc_delta_stress, get_center_and_thickness},
+    model::SettlementResult,
+};
 
 pub fn validate_input(
     soil_profile: &SoilProfile,
@@ -76,7 +79,7 @@ pub fn calc_settlement(
     soil_profile: &mut SoilProfile,
     foundation: &Foundation,
     foundation_pressure: f64,
-) -> Result<Vec<f64>, ValidationError> {
+) -> Result<SettlementResult, ValidationError> {
     validate_input(soil_profile, foundation, foundation_pressure)?;
     soil_profile.calc_layer_depths();
 
@@ -103,5 +106,9 @@ pub fn calc_settlement(
         let settlement = calc_single_layer_settlement(thickness, cc, cr, e0, gp, g0, delta_stress);
         settlements.push(settlement);
     }
-    Ok(settlements)
+    Ok(SettlementResult {
+        settlement_per_layer: settlements.clone(),
+        total_settlement: settlements.iter().sum(),
+        qnet: q_net,
+    })
 }
